@@ -1,0 +1,32 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Edit Your Profile</h2>
+                
+                <!-- enctype is REQUIRED for the profile picture upload! -->
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h5 class="text-muted">Account Details</h5>
+                    {{ u_form.as_p }}
+                    
+                    <hr>
+                    
+                    <h5 class="text-muted">Profile Details</h5>
+                    {{ p_form.as_p }}
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

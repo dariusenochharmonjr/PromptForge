@@ -1,0 +1,60 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}Log In - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body p-5">
+                
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary">Welcome Back</h2>
+                    <p class="text-muted">Log in to your PromptForge account</p>
+                </div>
+
+                <!-- The Form -->
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Username Field -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">USERNAME</label>
+                        {{ form.username }}
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">PASSWORD</label>
+                        {{ form.password }}
+                    </div>
+
+                    <!-- Error Message (Shows if login fails) -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger py-2 small">
+                            Invalid username or password. Please try again.
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Button -->
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                            Log In
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Footer Link -->
+                <div class="text-center mt-4 pt-3 border-top">
+                    <p class="text-muted mb-0">
+                        Don't have an account? 
+                        <a href="{% url 'signup' %}" class="fw-bold text-decoration-none">Sign Up</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

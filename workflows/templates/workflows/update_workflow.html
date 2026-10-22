@@ -1,0 +1,26 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}Edit Workflow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Edit Workflow</h2>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.as_p }}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <a href="{% url 'detail' workflow.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

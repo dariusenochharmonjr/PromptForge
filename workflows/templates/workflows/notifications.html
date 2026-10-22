@@ -1,0 +1,59 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}Notifications - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Notifications</h2>
+            <a href="{% url 'feed' %}" class="btn btn-sm btn-outline-secondary">Back to Feed</a>
+        </div>
+
+        {% if notifications %}
+            <div class="list-group shadow-sm rounded-3 overflow-hidden">
+                {% for note in notifications %}
+                    <div class="list-group-item list-group-item-action p-4 {% if not note.is_read %}bg-light{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <!-- Actor Profile Pic -->
+                            <div class="me-3">
+                                {% if note.actor.profile.profile_picture %}
+                                    <img src="{{ note.actor.profile.profile_picture.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                        {{ note.actor.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Notification Text -->
+                            <div class="flex-grow-1">
+                                <p class="mb-1">
+                                    <strong>{{ note.actor.get_full_name|default:note.actor.username }}</strong> 
+                                    {{ note.verb }}
+                                </p>
+                                <small class="text-muted">{{ note.timestamp|timesince }} ago</small>
+                            </div>
+
+                            <!-- Action Button -->
+                            {% if note.target %}
+                                <a href="{% url 'detail' note.target.pk %}" class="btn btn-sm btn-outline-primary rounded-pill ms-3">View Post</a>
+                            {% else %}
+                                <a href="{% url 'profile' note.actor.username %}" class="btn btn-sm btn-outline-primary rounded-pill ms-3">View Profile</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm text-center p-5">
+                <div class="text-muted fs-1 mb-3"></div>
+                <h5 class="fw-bold">No notifications yet</h5>
+                <p class="text-muted mb-0">When someone interacts with your prompts or follows you, you'll see it here!</p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

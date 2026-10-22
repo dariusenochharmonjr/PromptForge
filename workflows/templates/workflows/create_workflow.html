@@ -1,0 +1,141 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}Create New Prompt - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        
+        <!-- Header -->
+        <div class="mb-4">
+            <a href="{% url 'feed' %}" class="btn btn-sm btn-outline-secondary mb-3">
+                &larr; Back to Feed
+            </a>
+            <h1 class="h3 fw-bold mb-2">Create New Prompt</h1>
+            <p class="text-muted mb-0">Share your best AI prompt with the community.</p>
+        </div>
+
+        <!-- Creation Card -->
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Title</label>
+                        {{ form.title }}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Description</label>
+                        {{ form.description }}
+                        <div class="form-text">Explain what this prompt does and how to use it.</div>
+                    </div>
+
+                    <!-- AI Model -->
+                    <div class="mb-4">
+                        <label for="{{ form.ai_model.id_for_label }}" class="form-label fw-bold">AI Model</label>
+                        {{ form.ai_model }}
+                    </div>
+
+                    <!-- The Prompt Text -->
+                    <div class="mb-4">
+                        <label for="{{ form.prompt_text.id_for_label }}" class="form-label fw-bold">The Prompt</label>
+                        {{ form.prompt_text }}
+                        <div class="form-text">The actual text you feed into the AI.</div>
+                    </div>
+
+                    <!-- MODERN Image Upload -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Output Image (Optional)</label>
+                        <div class="file-upload-wrapper" id="file-upload-wrapper">
+                            <input type="file" name="output_image" id="id_output_image" class="file-upload-input" accept="image/*">
+                            <div class="file-upload-label">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <div class="upload-text" id="upload-text">Click to upload an image</div>
+                                <div class="upload-hint">SVG, PNG, JPG or GIF (max. 5MB)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODERN Video Upload -->
+                    <div class="mb-5">
+                        <label class="form-label fw-bold">Output Video (Optional)</label>
+                        <div class="file-upload-wrapper" id="video-upload-wrapper">
+                            <input type="file" name="output_video" id="id_output_video" class="file-upload-input" accept="video/*">
+                            <div class="file-upload-label">
+                                <i class="bi bi-film"></i>
+                                <div class="upload-text" id="video-upload-text">Click to upload a video</div>
+                                <div class="upload-hint">MP4, MOV, or WebM (max. 50MB)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'feed' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i> Publish Prompt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JavaScript for Modern File Uploads -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- Image Upload Logic ---
+        const fileInput = document.getElementById('id_output_image');
+        const uploadWrapper = document.getElementById('file-upload-wrapper');
+        const uploadText = document.getElementById('upload-text');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    uploadText.textContent = this.files[0].name;
+                    uploadWrapper.classList.add('has-file');
+                    const icon = uploadWrapper.querySelector('i');
+                    icon.classList.remove('bi-cloud-arrow-up');
+                    icon.classList.add('bi-check-circle-fill');
+                } else {
+                    uploadText.textContent = 'Click to upload an image';
+                    uploadWrapper.classList.remove('has-file');
+                    const icon = uploadWrapper.querySelector('i');
+                    icon.classList.remove('bi-check-circle-fill');
+                    icon.classList.add('bi-cloud-arrow-up');
+                }
+            });
+        }
+
+        // --- Video Upload Logic ---
+        const videoInput = document.getElementById('id_output_video');
+        const videoWrapper = document.getElementById('video-upload-wrapper');
+        const videoText = document.getElementById('video-upload-text');
+
+        if (videoInput) {
+            videoInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    videoText.textContent = this.files[0].name;
+                    videoWrapper.classList.add('has-file');
+                    const icon = videoWrapper.querySelector('i');
+                    icon.classList.remove('bi-film');
+                    icon.classList.add('bi-check-circle-fill');
+                } else {
+                    videoText.textContent = 'Click to upload a video';
+                    videoWrapper.classList.remove('has-file');
+                    const icon = videoWrapper.querySelector('i');
+                    icon.classList.remove('bi-check-circle-fill');
+                    icon.classList.add('bi-film');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}Sign Up - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body p-5">
+                
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary">Join PromptForge</h2>
+                    <p class="text-muted">Create an account to share and discover AI workflows</p>
+                </div>
+
+                <!-- The Form -->
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Full Name (Side by Side) -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">FIRST NAME</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">LAST NAME</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">EMAIL ADDRESS</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">USERNAME</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    
+                                        <!-- Date of Birth -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">DATE OF BIRTH</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- NEW: Profile Picture Upload -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted">PROFILE PHOTO <span class="text-muted fw-normal">(Optional)</span></label>
+                        {{ form.profile_picture }}
+                        <div class="form-text text-muted">Upload a square image for the best results.</div>
+                    </div>
+                    <!-- Passwords (Side by Side) -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">PASSWORD</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-muted">CONFIRM PASSWORD</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Footer Link -->
+                <div class="text-center mt-4 pt-3 border-top">
+                    <p class="text-muted mb-0">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="fw-bold text-decoration-none">Log In</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

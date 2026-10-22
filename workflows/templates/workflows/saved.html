@@ -1,0 +1,75 @@
+﻿{% extends 'workflows/base.html' %}
+
+{% block title %}Saved Prompts - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        
+        <!-- Professional Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div>
+                <h1 class="h3 fw-bold mb-1"><i class="bi bi-bookmark-fill me-2 text-warning"></i>Saved Prompts</h1>
+                <p class="text-muted mb-0">Your personal library of prompts.</p>
+            </div>
+        </div>
+
+        {% for bookmark in bookmarks %}
+        {% with workflow=bookmark.workflow %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            {% if workflow.author.profile.profile_picture %}
+                                <img src="{{ workflow.author.profile.profile_picture.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">{{ workflow.author.username|first|upper }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ workflow.author.get_full_name|default:workflow.author.username }}</div>
+                            <div class="text-muted small">@{{ workflow.author.username }} &bull; {{ workflow.created_at|timesince }} ago</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Unsave Button -->
+                    <form action="{% url 'toggle_bookmark' workflow.pk %}" method="POST" class="bookmark-form d-inline m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn bookmark-btn active" title="Remove from saved">
+                            <i class="bi bi-bookmark-fill"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <h5 class="card-title mb-2">
+                    <a href="{% url 'detail' workflow.pk %}" class="text-decoration-none text-dark">
+                        {{ workflow.title }}
+                    </a>
+                </h5>
+                <p class="card-text text-muted">{{ workflow.description|truncatewords:30 }}</p>
+
+                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                    <span class="badge bg-secondary">{{ workflow.ai_model }}</span>
+                    
+                    <!-- View Details Button -->
+                    <a href="{% url 'detail' workflow.pk %}" class="action-btn text-decoration-none" style="color: #6f42c1; font-weight: 600;">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        <span>View</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        
+        {% empty %}
+            <div class="text-center text-muted py-5">
+                <div style="font-size: 3rem; margin-bottom: 15px;"><i class="bi bi-bookmark"></i></div>
+                <h4 class="fw-bold">No saved prompts yet.</h4>
+                <p class="mb-0">Click the bookmark icon on any prompt to save it here for later!</p>
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

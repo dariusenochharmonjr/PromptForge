@@ -1,0 +1,260 @@
+{% extends 'workflows/base.html' %}
+
+{% block title %}{{ workflow.title }} - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        
+        <!-- Back Button -->
+        <a href="{% url 'feed' %}" class="btn btn-sm btn-outline-secondary mb-3">
+            &larr; Back to Feed
+        </a>
+
+        <!-- Main Workflow Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                
+                <!-- Header: Profile Pic + Author Info + Follow -->
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            {% if workflow.author.profile.profile_picture %}
+                                <img src="{{ workflow.author.profile.profile_picture.url }}" 
+                                     class="rounded-circle" 
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" 
+                                     style="width: 60px; height: 60px; font-size: 24px;">
+                                    {{ workflow.author.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-5">
+                                {{ workflow.author.get_full_name|default:workflow.author.username }}
+                            </div>
+                            <div class="text-muted">
+                                @{{ workflow.author.username }} &bull; {{ workflow.created_at|date:"F d, Y" }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Follow Button -->
+                    {% if user.is_authenticated and user != workflow.author %}
+                        <form action="{% url 'toggle_follow' workflow.author.username %}" method="POST" class="follow-form d-inline">
+                            {% csrf_token %}
+                            {% if workflow.author.username in following_usernames %}
+                                <button type="submit" class="btn btn-outline-secondary rounded-pill px-3 follow-btn" data-username="{{ workflow.author.username }}">Following</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-primary rounded-pill px-3 follow-btn" data-username="{{ workflow.author.username }}">Follow</button>
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                </div>
+
+                <!-- Title & AI Model Badge -->
+                <div class="mb-3">
+                    <h1 class="h3 mb-2">{{ workflow.title }}</h1>
+                    <span class="badge bg-primary">{{ workflow.ai_model }}</span>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h5 class="text-muted mb-2">Description</h5>
+                    <p>{{ workflow.description }}</p>
+                </div>
+
+                <!-- The Prompt -->
+                <div class="mb-4">
+                    <h5 class="text-muted mb-2">The Prompt</h5>
+                    <div id="prompt-text-{{ workflow.pk }}" 
+                         class="bg-light p-3 rounded border position-relative">
+                        <pre style="white-space: pre-wrap; font-family: inherit; margin-bottom: 0;">{{ workflow.prompt_text }}</pre>
+                    </div>
+                    
+                    <!-- Copy Prompt Button -->
+                    <button onclick="copyPrompt('{{ workflow.pk }}')" 
+                            class="btn btn-primary mt-3" 
+                            id="copy-btn-{{ workflow.pk }}">
+                        <i class="bi bi-clipboard me-1"></i> Copy Prompt
+                    </button>
+                </div>
+
+                <!-- Output Media (Image or Video) -->
+                {% if workflow.output_image %}
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Output Example</h5>
+                        <img src="{{ workflow.output_image.url }}" class="img-fluid rounded" alt="Output">
+                    </div>
+                {% elif workflow.output_video %}
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-2">Output Video</h5>
+                        <video controls class="img-fluid rounded w-100" style="max-height: 500px; background: #000; border-radius: 12px;">
+                            <source src="{{ workflow.output_video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                {% endif %}
+
+                <!-- MODERN ACTION BUTTONS -->
+                <div class="d-flex align-items-center gap-3 mb-4 pt-3 border-top">
+                    <!-- Upvote -->
+                    <form action="{% url 'upvote' workflow.pk %}" method="POST" class="upvote-form m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn upvote-btn {% if is_upvoted %}active{% endif %}">
+                            <i class="bi {% if is_upvoted %}bi-arrow-up-fill{% else %}bi-arrow-up{% endif %}"></i>
+                            <span class="upvote-count">{{ workflow.total_upvotes }} Upvotes</span>
+                        </button>
+                    </form>
+
+                    <!-- Love -->
+                    <form action="{% url 'toggle_love' workflow.pk %}" method="POST" class="love-form m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn love-btn {% if is_loved %}active{% endif %}">
+                            <i class="bi {% if is_loved %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                            <span class="love-count">{{ workflow.love_reactions.count }} Loves</span>
+                        </button>
+                    </form>
+
+                    <!-- NEW: Bookmark -->
+                    <form action="{% url 'toggle_bookmark' workflow.pk %}" method="POST" class="bookmark-form m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn bookmark-btn {% if is_bookmarked %}active{% endif %}">
+                            <i class="bi {% if is_bookmarked %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
+                            <span>Save</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Professional Options Dropdown (Edit, Share, Delete) -->
+                {% if user == workflow.author %}
+                <div class="dropdown mb-4">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical me-1"></i> Options
+                    </button>
+                    <ul class="dropdown-menu shadow-sm border-0">
+                        <li>
+                            <a class="dropdown-item py-2" href="{% url 'update' workflow.pk %}">
+                                <i class="bi bi-pencil me-2 text-muted"></i> Edit
+                            </a>
+                        </li>
+                        <li>
+                            <button class="dropdown-item py-2" type="button" onclick="sharePrompt(this)">
+                                <i class="bi bi-share me-2 text-muted"></i> Share
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item py-2 text-danger" href="{% url 'delete' workflow.pk %}">
+                                <i class="bi bi-trash me-2"></i> Delete
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="card">
+            <div class="card-body">
+                <h4 class="mb-4">
+                    Comments ({{ workflow.comments.count }})
+                </h4>
+
+                <!-- Comment Form -->
+                {% if user.is_authenticated %}
+                    <form action="{% url 'add_comment' workflow.pk %}" 
+                          method="POST" 
+                          class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <textarea name="text" 
+                                      class="form-control modern-input" 
+                                      rows="3" 
+                                      placeholder="Write a comment..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+                {% else %}
+                    <p class="text-muted mb-4">
+                        <a href="{% url 'login' %}">Log in</a> to leave a comment.
+                    </p>
+                {% endif %}
+
+                <!-- Comments List -->
+                <div class="comments-list">
+                    {% for comment in workflow.comments.all %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex">
+                                    <div class="me-3">
+                                        {% if comment.author.profile.profile_picture %}
+                                            <img src="{{ comment.author.profile.profile_picture.url }}" 
+                                                 class="rounded-circle" 
+                                                 style="width: 45px; height: 45px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" 
+                                                 style="width: 45px; height: 45px;">
+                                                {{ comment.author.username|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold">
+                                                    {{ comment.author.get_full_name|default:comment.author.username }}
+                                                </div>
+                                                <div class="text-muted small">
+                                                    @{{ comment.author.username }} &bull; {{ comment.created_at|timesince }} ago
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 mb-0">{{ comment.text }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted text-center py-4">
+                            No comments yet. Be the first to comment!
+                        </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JavaScript for Copy Prompt and Share -->
+<script>
+    function copyPrompt(pk) {
+        const promptText = document.getElementById('prompt-text-' + pk).innerText;
+        navigator.clipboard.writeText(promptText).then(() => {
+            const btn = document.getElementById('copy-btn-' + pk);
+            btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Copied!';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy Prompt';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
+            }, 2000);
+        });
+    }
+
+    function sharePrompt(btn) {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2 me-2 text-success"></i> Link Copied!';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
+        });
+    }
+</script>
+{% endblock %}

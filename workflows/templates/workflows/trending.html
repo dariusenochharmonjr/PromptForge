@@ -1,0 +1,139 @@
+﻿{% extends 'workflows/base.html' %}
+
+{% block title %}Trending - PromptForge{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        
+        <!-- Professional Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div>
+                <h1 class="h3 fw-bold mb-1"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Trending Prompts</h1>
+                <p class="text-muted mb-0">The most popular prompts from the last 7 days.</p>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <form method="GET" action="{% url 'trending' %}" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control modern-input" placeholder="Search trending prompts..." value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+
+        <!-- Feed Posts -->
+        {% for workflow in workflows %}
+        <div class="card mb-3">
+            <div class="card-body">
+                
+                <!-- Header: Profile Pic + Follow + Posted By -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            {% if workflow.author.profile.profile_picture %}
+                                <img src="{{ workflow.author.profile.profile_picture.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                    {{ workflow.author.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold">
+                                {{ workflow.author.get_full_name|default:workflow.author.username }}
+                            </div>
+                            <div class="text-muted small">
+                                @{{ workflow.author.username }} &bull; {{ workflow.created_at|timesince }} ago
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Instant Follow Button -->
+                    {% if user.is_authenticated and user != workflow.author %}
+                        <form action="{% url 'toggle_follow' workflow.author.username %}" method="POST" class="follow-form d-inline">
+                            {% csrf_token %}
+                            {% if workflow.author.username in following_usernames %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill follow-btn" data-username="{{ workflow.author.username }}">Following</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-primary rounded-pill follow-btn" data-username="{{ workflow.author.username }}">Follow</button>
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                </div>
+
+                <!-- Content -->
+                <h5 class="card-title mb-2">
+                    <a href="{% url 'detail' workflow.pk %}" class="text-decoration-none text-dark">
+                        {{ workflow.title }}
+                    </a>
+                </h5>
+                <p class="card-text text-muted">{{ workflow.description|truncatewords:30 }}</p>
+
+                <!-- Output Media -->
+                {% if workflow.output_image %}
+                    <img src="{{ workflow.output_image.url }}" class="img-fluid rounded mb-3" alt="Output">
+                {% elif workflow.output_video %}
+                    <video controls class="img-fluid rounded mb-3 w-100" style="max-height: 400px; background: #000; border-radius: 12px;">
+                        <source src="{{ workflow.output_video.url }}" type="video/mp4">
+                    </video>
+                {% endif %}
+
+                <!-- Footer: AI Model + Modern Reactions -->
+                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                    <span class="badge bg-secondary">{{ workflow.ai_model }}</span>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Upvote -->
+                        <form action="{% url 'upvote' workflow.pk %}" method="POST" class="upvote-form d-inline m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn upvote-btn {% if workflow.pk in upvoted_ids %}active{% endif %}">
+                                <i class="bi {% if workflow.pk in upvoted_ids %}bi-arrow-up-fill{% else %}bi-arrow-up{% endif %}"></i>
+                                <span class="upvote-count">{{ workflow.total_upvotes }}</span>
+                            </button>
+                        </form>
+
+                        <!-- Love -->
+                        <form action="{% url 'toggle_love' workflow.pk %}" method="POST" class="love-form d-inline m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn love-btn {% if workflow.pk in loved_ids %}active{% endif %}">
+                                <i class="bi {% if workflow.pk in loved_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                                <span class="love-count">{{ workflow.love_reactions.count }}</span>
+                            </button>
+                        </form>
+
+                        <!-- Comment -->
+                        <a href="{% url 'detail' workflow.pk %}" class="action-btn comment-btn text-decoration-none">
+                            <i class="bi bi-chat"></i>
+                            <span>{{ workflow.comments.count }}</span>
+                        </a>
+
+                        <!-- Bookmark -->
+                        <form action="{% url 'toggle_bookmark' workflow.pk %}" method="POST" class="bookmark-form d-inline m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="action-btn bookmark-btn {% if workflow.pk in bookmarked_ids %}active{% endif %}">
+                                <i class="bi {% if workflow.pk in bookmarked_ids %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
+                            </button>
+                        </form>
+
+                        <!-- NEW: View Details Button -->
+                        <a href="{% url 'detail' workflow.pk %}" class="action-btn text-decoration-none" style="color: #6f42c1; font-weight: 600;">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            <span>View</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% empty %}
+            <div class="text-center text-muted py-5">
+                <div style="font-size: 3rem; margin-bottom: 15px;"><i class="bi bi-bar-chart-line"></i></div>
+                <h4 class="fw-bold">No trending prompts yet.</h4>
+                <p class="mb-0">Check back soon, or head to the <a href="{% url 'feed' %}">Home feed</a> to see the latest posts!</p>
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}
