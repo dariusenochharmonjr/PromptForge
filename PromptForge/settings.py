@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     ## This app is for the workflows
     'workflows',
     'accounts',
-    'cloudinary'
-    'cloudinary_storage'
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -126,7 +126,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Add these to the very bottom of settings.py:
 MEDIA_URL = '/media/'
