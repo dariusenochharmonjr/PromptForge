@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'your-local-dev-key-here')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Allow localhost for local dev, and Render's domains for production
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.onrender.com']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     ## This app is for the workflows
     'workflows',
     'accounts',
+    'cloudinary'
+    'cloudinary_storage'
 ]
 
 MIDDLEWARE = [
