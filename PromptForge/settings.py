@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    ## This app is for the workflows
+    
     'workflows',
     'accounts',
     'cloudinary',
