@@ -147,14 +147,14 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
    # Jazzmin Admin Theme Settings
-   JAZZMIN_SETTINGS = {
-       "site_title": "PromptForge Admin",
-       "site_header": "PromptForge",
-       "site_brand": "PromptForge",
-       "welcome_sign": "Welcome to the PromptForge Dashboard",
-       "search_model": ["workflows.Workflow", "accounts.Profile"],
-       "topmenu_links": [
-           {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+JAZZMIN_SETTINGS = {
+    "site_title": "PromptForge Admin",
+    "site_header": "PromptForge",
+    "site_brand": "PromptForge",
+    "welcome_sign": "Welcome to the PromptForge Dashboard",
+    "search_model": ["workflows.Workflow", "accounts.Profile"],
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
            {"name": "View Site", "url": "/", "new_window": True},
-       ],
-   }
+    ],
+}
