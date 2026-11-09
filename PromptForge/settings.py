@@ -35,6 +35,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin'
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -84,20 +85,12 @@ WSGI_APPLICATION = 'PromptForge.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Use Neon database in production, SQLite locally
-if os.environ.get('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=True
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -151,3 +144,17 @@ cloudinary.config(
     secure=True
 )
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+   # Jazzmin Admin Theme Settings
+   JAZZMIN_SETTINGS = {
+       "site_title": "PromptForge Admin",
+       "site_header": "PromptForge",
+       "site_brand": "PromptForge",
+       "welcome_sign": "Welcome to the PromptForge Dashboard",
+       "search_model": ["workflows.Workflow", "accounts.Profile"],
+       "topmenu_links": [
+           {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+           {"name": "View Site", "url": "/", "new_window": True},
+       ],
+   }
