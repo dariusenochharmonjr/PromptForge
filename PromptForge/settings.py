@@ -35,7 +35,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin'
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -134,7 +134,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Static files (CSS, JS)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (Images, Videos via Cloudinary)
 cloudinary.config(
@@ -143,11 +142,8 @@ cloudinary.config(
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
     secure=True
 )
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-   # Jazzmin Admin Theme Settings
-JAZZMIN_SETTINGS = {
+JAZZMIN_SETTINGS = { #Jazzmin Admin Theme Settings
     "site_title": "PromptForge Admin",
     "site_header": "PromptForge",
     "site_brand": "PromptForge",
@@ -155,6 +151,14 @@ JAZZMIN_SETTINGS = {
     "search_model": ["workflows.Workflow", "accounts.Profile"],
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-           {"name": "View Site", "url": "/", "new_window": True},
+        {"name": "View Site", "url": "/", "new_window": True},
     ],
+}
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
 }
