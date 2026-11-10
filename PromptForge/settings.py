@@ -18,7 +18,15 @@ import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://lbr.pythonanywhere.com',
+    'https://*.pythonanywhere.com',  # Wildcard for all PythonAnywhere subdomains
+]
+# In settings.py
+CSRF_COOKIE_SECURE = False  # Change to False for testing, True in production
+SESSION_COOKIE_SECURE = False  # Change to False for testing
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/

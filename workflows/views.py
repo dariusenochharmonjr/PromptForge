@@ -209,7 +209,10 @@ def update_workflow_view(request, pk):
             return redirect('detail', pk=workflow.pk)
     else:
         form = WorkflowForm(instance=workflow)
-    return render(request, 'workflows/update_workflow.html', {'form': form, 'workflow': workflow})
+    return render(request, 'workflows/update_workflow.html', {
+    'form': form, 
+    'workflow': workflow,
+    'workflow_pk': workflow.pk})
 
 @login_required
 def delete_workflow_view(request, pk):
