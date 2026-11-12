@@ -43,9 +43,12 @@
                 </div>
             </div>
 
-            <!-- H2: Full Name -->
+            <!-- H2: Full Name + Online Status -->
             <h2 class="fw-bold mb-1 text-center">
                 {{ profile_user.get_full_name|default:profile_user.username }}
+                {% if profile_user.profile.is_online %}
+                    <span class="badge bg-success rounded-pill" style="font-size: 0.8rem; vertical-align: middle;">Online</span>
+                {% endif %}
             </h2>
 
             <!-- H4: Username + Edit Button (Clean & Consolidated) -->
