@@ -66,6 +66,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'PromptForge.middleware.ActiveStatusMiddleware',  # <-- ADD THIS LINE
+
 ]
 
 ROOT_URLCONF = 'PromptForge.urls'

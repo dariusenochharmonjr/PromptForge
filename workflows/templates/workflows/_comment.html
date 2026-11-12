@@ -9,7 +9,13 @@
             {% endif %}
         </a>
         <div class="flex-grow-1">
-            <div class="fw-bold">{{ comment.author.get_full_name|default:comment.author.username }} <span class="text-muted small fw-normal">@{{ comment.author.username }} &bull; {{ comment.created_at|timesince }} ago</span></div>
+            <div class="fw-bold d-flex align-items-center gap-2 flex-wrap">
+                {{ comment.author.get_full_name|default:comment.author.username }}
+                {% if comment.author.profile.is_online %}
+                    <span class="badge bg-success rounded-pill" style="font-size:0.6rem;">Online</span>
+                {% endif %}
+                <span class="text-muted small fw-normal">@{{ comment.author.username }} &bull; {{ comment.created_at|timesince }} ago</span>
+            </div>
             <p class="mb-2">{{ comment|body }}</p>
 
             <div class="d-flex align-items-center gap-2 mb-2">

@@ -299,6 +299,36 @@
             }
         }
     </style>
+        <!-- ===== NAV SCROLL HINT: slides right-left once to teach the swipe ===== -->
+    <style>
+        @media (max-width: 768px) {
+            .nav-links-container { flex-wrap: nowrap; overflow-x: auto; }
+            .nav-link-custom { white-space: nowrap; flex-shrink: 0; }
+        }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var nav = document.querySelector('.nav-links-container');
+        if (!nav) return;
+        if (sessionStorage.getItem('pfNavHint')) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        function hint() {
+            if (nav.scrollWidth <= nav.clientWidth + 8) return;  // nothing hidden → no hint
+            sessionStorage.setItem('pfNavHint', '1');            // once per session only
+            var home = nav.scrollLeft;
+            if (nav.scrollTo) {
+                nav.scrollTo({ left: nav.scrollWidth, behavior: 'smooth' });
+                setTimeout(function () { nav.scrollTo({ left: home, behavior: 'smooth' }); }, 1000);
+            } else {
+                nav.scrollLeft = nav.scrollWidth;
+                setTimeout(function () { nav.scrollLeft = home; }, 1000);
+            }
+        }
+
+        setTimeout(hint, 800);
+    });
+    </script>
 </head>
 <body>
 

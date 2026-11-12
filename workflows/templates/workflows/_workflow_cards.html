@@ -15,7 +15,12 @@
                     </a>
                 </div>
                 <div>
-                    <div class="fw-bold">{{ workflow.author.get_full_name|default:workflow.author.username }}</div>
+                    <div class="fw-bold d-flex align-items-center gap-2">
+                        {{ workflow.author.get_full_name|default:workflow.author.username }}
+                        {% if workflow.author.profile.is_online %}
+                            <span class="badge bg-success rounded-pill" style="font-size:0.6rem;">Online</span>
+                        {% endif %}
+                    </div>
                     <div class="text-muted small">@{{ workflow.author.username }} &bull; {{ workflow.created_at|timesince }} ago</div>
                 </div>
             </div>

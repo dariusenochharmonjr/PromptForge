@@ -55,7 +55,11 @@ class Profile(models.Model):
     bio = models.TextField(max_length=500, blank=True, help_text="Tell us about yourself!")
     profile_picture = models.ImageField(upload_to='avatars/', blank=True, null=True)
     date_of_birth = models.DateField() 
-
+    last_active = models.DateTimeField(auto_now=True)
+    def is_online(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        return bool(self.last_active) and (timezone.now() - self.last_active) < timedelta(minutes=5)
     def __str__(self):
         return f"{self.user.username}'s Profile"
 

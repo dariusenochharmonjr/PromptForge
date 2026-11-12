@@ -33,8 +33,11 @@
                             </a>
                         </div>
                         <div>
-                            <div class="fw-bold fs-5">
+                            <div class="fw-bold fs-5 d-flex align-items-center gap-2">
                                 {{ workflow.author.get_full_name|default:workflow.author.username }}
+                                {% if workflow.author.profile.is_online %}
+                                    <span class="badge bg-success rounded-pill" style="font-size:0.7rem;">Online</span>
+                                {% endif %}
                             </div>
                             <div class="text-muted">
                                 @{{ workflow.author.username }} &bull; {{ workflow.created_at|date:"F d, Y" }}
