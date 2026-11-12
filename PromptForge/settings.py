@@ -22,6 +22,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://lbr.pythonanywhere.com',
     'https://*.pythonanywhere.com',  # Wildcard for all PythonAnywhere subdomains
 ]
+CSRF_FAILURE_VIEW = 'workflows.views.csrf_failure_view'
 # In settings.py
 CSRF_COOKIE_SECURE = False  # Change to False for testing, True in production
 SESSION_COOKIE_SECURE = False  # Change to False for testing
@@ -67,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'PromptForge.middleware.ActiveStatusMiddleware',  # <-- ADD THIS LINE
+    'PromptForge.middleware.EnsureCsrfCookieMiddleware',
 
 ]
 

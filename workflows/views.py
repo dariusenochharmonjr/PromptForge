@@ -2,14 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Count
-from django.http import JsonResponse 
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
+from django.middleware.csrf import get_token as _ensure_csrf_token
 
-from .models import Workflow, Upvote, Profile, Follow, LoveReaction, Comment, Notification, Bookmark
+from .models import (Workflow, Upvote, Profile, Follow, LoveReaction, Comment,
+                     Notification, Bookmark, Reply, CommentLike)
 from .forms import WorkflowForm, UserUpdateForm, ProfileUpdateForm, CommentForm
+
 
 # FEED AND SEARCH
 def feed_view(request):
@@ -105,7 +108,7 @@ def detail_view(request, pk):
     })
 
 
-# --- CREATE WORKFLOW ---
+# --- CREATE WORKFLOW (Cloudinary failures become friendly field errors) ---
 @login_required
 def create_workflow_view(request):
     if request.method == 'POST':
@@ -113,7 +116,18 @@ def create_workflow_view(request):
         if form.is_valid():
             workflow = form.save(commit=False)
             workflow.author = request.user
-            workflow.save()
+            try:
+                workflow.save()
+            except Exception:
+                msg = ('Cloudinary could not accept that media file. Please try a different file '
+                       '(JPG/PNG/WEBP under 10MB, or MP4/WEBM under 60MB).')
+                if request.FILES.get('output_image'):
+                    form.add_error('output_image', msg)
+                elif request.FILES.get('output_video'):
+                    form.add_error('output_video', msg)
+                else:
+                    form.add_error(None, msg)
+                return render(request, 'workflows/create_workflow.html', {'form': form})
             return redirect('detail', pk=workflow.pk)
     else:
         form = WorkflowForm()
@@ -212,27 +226,41 @@ def toggle_follow_view(request, username):
     return redirect('profile', username=profile_user.username)
 
 
-# --- EDIT & DELETE WORKFLOW ---
+# --- EDIT & DELETE WORKFLOW (Cloudinary failures become friendly field errors) ---
 @login_required
 def update_workflow_view(request, pk):
     workflow = get_object_or_404(Workflow, pk=pk)
-    if workflow.author != request.user: return redirect('feed')
+    if workflow.author != request.user:
+        return redirect('feed')
     if request.method == 'POST':
         form = WorkflowForm(request.POST, request.FILES, instance=workflow)
         if form.is_valid():
-            form.save()
+            try:
+                form.save()
+            except Exception:
+                msg = ('Cloudinary could not accept that media file. Please try a different file '
+                       '(JPG/PNG/WEBP under 10MB, or MP4/WEBM under 60MB).')
+                if request.FILES.get('output_image'):
+                    form.add_error('output_image', msg)
+                elif request.FILES.get('output_video'):
+                    form.add_error('output_video', msg)
+                else:
+                    form.add_error(None, msg)
+                return render(request, 'workflows/update_workflow.html', {
+                    'form': form, 'workflow': workflow, 'workflow_pk': workflow.pk})
             return redirect('detail', pk=workflow.pk)
     else:
         form = WorkflowForm(instance=workflow)
     return render(request, 'workflows/update_workflow.html', {
-    'form': form, 
-    'workflow': workflow,
-    'workflow_pk': workflow.pk})
+        'form': form,
+        'workflow': workflow,
+        'workflow_pk': workflow.pk})
 
 @login_required
 def delete_workflow_view(request, pk):
     workflow = get_object_or_404(Workflow, pk=pk)
-    if workflow.author != request.user: return redirect('feed')
+    if workflow.author != request.user:
+        return redirect('feed')
     if request.method == 'POST':
         workflow.delete()
         return redirect('feed')
@@ -310,11 +338,8 @@ def notifications_view(request):
     notifications.filter(is_read=False).update(is_read=True)
     return render(request, 'workflows/notifications.html', {'notifications': notifications})
 
+
 # --- Comments v2: replies + likes ---
-from django.template.loader import render_to_string as _render_to_string
-from .models import Reply as _Reply, CommentLike as _CommentLike
-
-
 def _comment_text_field():
     names = {f.name for f in Comment._meta.fields}
     for cand in ("text", "content", "body", "message", "comment"):
@@ -342,11 +367,11 @@ def post_reply_view(request, pk):
     if request.method == 'POST':
         text = (request.POST.get('text') or '').strip()
         if text:
-            reply = _Reply.objects.create(comment=comment, author=request.user, text=text)
+            reply = Reply.objects.create(comment=comment, author=request.user, text=text)
             if comment.author != request.user:
                 Notification.objects.create(recipient=comment.author, actor=request.user, verb='replied to your comment', target=comment.workflow)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                html = _render_to_string('workflows/_reply.html', {'reply': reply}, request=request)
+                html = render_to_string('workflows/_reply.html', {'reply': reply}, request=request)
                 return JsonResponse({'html': html, 'count': comment.replies.count()})
     return redirect('detail', pk=comment.workflow.pk)
 
@@ -354,13 +379,59 @@ def post_reply_view(request, pk):
 @login_required
 def like_comment_view(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
-    existing = _CommentLike.objects.filter(user=request.user, comment=comment).first()
+    existing = CommentLike.objects.filter(user=request.user, comment=comment).first()
     if existing:
         existing.delete()
         is_liked = False
     else:
-        _CommentLike.objects.create(user=request.user, comment=comment)
+        CommentLike.objects.create(user=request.user, comment=comment)
         is_liked = True
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'is_liked': is_liked, 'like_count': comment.likes.count()})
     return redirect('detail', pk=comment.workflow.pk)
+
+
+# --- SELF-HEALING CSRF FAILURE PAGE ---
+def csrf_failure_view(request, reason=""):
+    _ensure_csrf_token(request)  # set a fresh cookie on this very response
+    referer = request.META.get('HTTP_REFERER', '')
+    host = request.get_host()
+    target = '/'
+    if referer:
+        try:
+            from urllib.parse import urlparse
+            if urlparse(referer).netloc == host:
+                target = referer
+        except Exception:
+            target = '/'
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Security refresh - PromptForge</title>
+        <style>
+            body {{ font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f6f4fb;
+                   color: #241f36; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+            .card {{ background: #fff; border-radius: 16px; padding: 40px 32px; max-width: 420px; text-align: center;
+                    box-shadow: 0 12px 40px rgba(111, 66, 193, .18); }}
+            .bolt {{ font-size: 42px; }}
+            h1 {{ font-size: 1.25rem; margin: 12px 0 8px; }}
+            p {{ color: #6c6680; font-size: .95rem; line-height: 1.5; margin: 0 0 20px; }}
+            a {{ display: inline-block; background: #6f42c1; color: #fff; text-decoration: none; padding: 10px 22px;
+                border-radius: 999px; font-weight: 600; }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="bolt">⚡</div>
+            <h1>Quick security refresh</h1>
+            <p>Your browser needed a fresh security cookie. We've set one for you — taking you right back so you can try again.</p>
+            <a href="{target}">Continue now</a>
+        </div>
+        <script>setTimeout(function () {{ location.href = "{target}"; }}, 1800);</script>
+    </body>
+    </html>
+    """
+    return HttpResponse(html, status=403)
