@@ -25,4 +25,8 @@ urlpatterns = [
 
     path('saved/', views.saved_view, name='saved'),
     path('bookmark/<int:pk>/', views.toggle_bookmark_view, name='toggle_bookmark'),
+
+    path('workflow/<int:pk>/comment/', views.post_comment_view, name='post_comment'),
+    path('comment/<int:pk>/reply/', views.post_reply_view, name='post_reply'),
+    path('comment/<int:pk>/like/', views.like_comment_view, name='like_comment'),
 ]

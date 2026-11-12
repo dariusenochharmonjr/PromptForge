@@ -1,0 +1,13 @@
+<div class="d-flex mt-2">
+    <a href="{% url 'profile' reply.author.username %}" class="text-decoration-none me-2">
+        {% if reply.author.profile.profile_picture %}
+            <img src="{{ reply.author.profile.profile_picture.url }}" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">
+        {% else %}
+            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:32px;height:32px;font-size:0.8rem;">{{ reply.author.username|first|upper }}</div>
+        {% endif %}
+    </a>
+    <div>
+        <div class="fw-bold small">{{ reply.author.get_full_name|default:reply.author.username }} <span class="text-muted fw-normal">@{{ reply.author.username }} &bull; {{ reply.created_at|timesince }} ago</span></div>
+        <p class="mb-1 small">{{ reply.text }}</p>
+    </div>
+</div>

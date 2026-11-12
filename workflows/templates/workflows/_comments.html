@@ -1,0 +1,24 @@
+{% load comment_extras %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-chat-dots me-2" style="color:#6f42c1;"></i>Comments (<span id="comments-count">{{ workflow.comments.count }}</span>)</h5>
+
+        {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'post_comment' workflow.pk %}" class="mb-4">
+            {% csrf_token %}
+            <textarea name="text" rows="3" class="form-control modern-input mb-2" placeholder="Share your thoughts..." required></textarea>
+            <button type="submit" class="btn btn-primary rounded-pill px-4">Post Comment</button>
+        </form>
+        {% else %}
+        <p class="text-muted">Log in to join the conversation.</p>
+        {% endif %}
+
+        <div id="comments-list">
+            {% for comment in workflow.comments.all %}
+                {% include 'workflows/_comment.html' %}
+            {% empty %}
+                <p class="text-muted mb-0">No comments yet. Start the conversation.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>

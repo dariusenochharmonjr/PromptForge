@@ -1,0 +1,47 @@
+{% load comment_extras %}
+<div class="border-top pt-3 mt-3" id="comment-{{ comment.pk }}">
+    <div class="d-flex">
+        <a href="{% url 'profile' comment.author.username %}" class="text-decoration-none me-2">
+            {% if comment.author.profile.profile_picture %}
+                <img src="{{ comment.author.profile.profile_picture.url }}" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">
+            {% else %}
+                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:40px;height:40px;">{{ comment.author.username|first|upper }}</div>
+            {% endif %}
+        </a>
+        <div class="flex-grow-1">
+            <div class="fw-bold">{{ comment.author.get_full_name|default:comment.author.username }} <span class="text-muted small fw-normal">@{{ comment.author.username }} &bull; {{ comment.created_at|timesince }} ago</span></div>
+            <p class="mb-2">{{ comment|body }}</p>
+
+            <div class="d-flex align-items-center gap-2 mb-2">
+                {% comment_liked comment user as liked %}
+                <form method="POST" action="{% url 'like_comment' comment.pk %}" class="like-form-v2 d-inline m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn love-btn {% if liked %}active{% endif %}" style="padding:4px 8px;">
+                        <i class="bi {% if liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                        <span class="like-count">{{ comment.likes.count }}</span>
+                    </button>
+                </form>
+                {% if user.is_authenticated %}
+                <button type="button" class="action-btn comment-btn reply-toggle" data-reply-form="reply-form-{{ comment.pk }}" style="padding:4px 8px;">
+                    <i class="bi bi-reply"></i><span>Reply</span>
+                </button>
+                {% endif %}
+                <span class="text-muted small"><span id="reply-count-{{ comment.pk }}">{{ comment.replies.count }}</span> replies</span>
+            </div>
+
+            <div id="replies-{{ comment.pk }}" class="ms-2 border-start ps-3">
+                {% for reply in comment.replies.all %}
+                    {% include 'workflows/_reply.html' %}
+                {% endfor %}
+            </div>
+
+            {% if user.is_authenticated %}
+            <form method="POST" action="{% url 'post_reply' comment.pk %}" class="reply-form mt-2" id="reply-form-{{ comment.pk }}" data-replies="replies-{{ comment.pk }}" data-count="reply-count-{{ comment.pk }}" hidden>
+                {% csrf_token %}
+                <textarea name="text" rows="2" class="form-control modern-input mb-2" placeholder="Reply to {{ comment.author.username }}..." required></textarea>
+                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Reply</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>

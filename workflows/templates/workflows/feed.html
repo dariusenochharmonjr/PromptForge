@@ -1,12 +1,10 @@
 {% extends 'workflows/base.html' %}
-
 {% block title %}Home - PromptForge{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        
-        <!-- Search Bar -->
+
         <form method="GET" action="{% url 'feed' %}" class="mb-4">
             <div class="input-group">
                 <input type="text" name="q" class="form-control modern-input" placeholder="Search prompts..." value="{{ search_query }}">
@@ -14,18 +12,16 @@
             </div>
         </form>
 
-        <!-- Post Creation Box -->
         {% if user.is_authenticated %}
         <div class="card mb-4">
             <div class="card-body">
                 <div class="d-flex">
                     <div class="me-3">
-                        <!-- WRAPPED IN A CLICKABLE LINK TO YOUR PROFILE -->
                         <a href="{% url 'profile' user.username %}" class="text-decoration-none">
                             {% if user.profile.profile_picture %}
-                                <img src="{{ user.profile.profile_picture.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;">
+                                <img src="{{ user.profile.profile_picture.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
                             {% else %}
-                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px; cursor: pointer;">
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
                                     {{ user.username|first|upper }}
                                 </div>
                             {% endif %}
@@ -33,9 +29,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <a href="{% url 'create' %}" class="text-decoration-none">
-                            <div class="border rounded p-3 text-muted">
-                                Post your Prompt...
-                            </div>
+                            <div class="border rounded p-3 text-muted">Post your Prompt...</div>
                         </a>
                     </div>
                 </div>
@@ -43,120 +37,115 @@
         </div>
         {% endif %}
 
-        <!-- Feed Posts -->
-        {% for workflow in workflows %}
-        <div class="card mb-3">
-            <div class="card-body">
-                
-                <!-- Header: Profile Pic + Follow + Posted By -->
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex">
-                        <div class="me-3">
-                            <!-- Link to the author's profile -->
-                            <a href="{% url 'profile' workflow.author.username %}" class="text-decoration-none">
-                                {% if workflow.author.profile.profile_picture %}
-                                <img src="{{ workflow.author.profile.profile_picture.url }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
-                                {% else %}
-                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
-                                    {{ workflow.author.username|first|upper }}
-                                </div>
-                                {% endif %}
-                            </a>
-                        </div>
-                        <div>
-                            <div class="fw-bold">
-                                {{ workflow.author.get_full_name|default:workflow.author.username }}
-                            </div>
-                            <div class="text-muted small">
-                                @{{ workflow.author.username }} &bull; {{ workflow.created_at|timesince }} ago
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Instant Follow Button on the Post -->
-                    {% if user.is_authenticated and user != workflow.author %}
-                        <form action="{% url 'toggle_follow' workflow.author.username %}" method="POST" class="follow-form d-inline">
-                            {% csrf_token %}
-                            {% if workflow.author.username in following_usernames %}
-                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill follow-btn" data-username="{{ workflow.author.username }}">Following</button>
-                            {% else %}
-                                <button type="submit" class="btn btn-sm btn-primary rounded-pill follow-btn" data-username="{{ workflow.author.username }}">Follow</button>
-                            {% endif %}
-                        </form>
-                    {% endif %}
-                </div>
+        <!-- Cards get appended here automatically -->
+        <div id="feed-container">
+            {% include 'workflows/_workflow_cards.html' %}
+        </div>
 
-                <!-- Content -->
-                <h5 class="card-title mb-2">
-                    <a href="{% url 'detail' workflow.pk %}" class="text-decoration-none text-dark">
-                        {{ workflow.title }}
-                    </a>
-                </h5>
-                <p class="card-text text-muted">{{ workflow.description|truncatewords:30 }}</p>
-
-                <!-- Output Media (Image or Video) -->
-                {% if workflow.output_image %}
-                    <img src="{{ workflow.output_image.url }}" class="img-fluid rounded mb-3" alt="Output">
-                {% elif workflow.output_video %}
-                    <video controls class="img-fluid rounded mb-3 w-100" style="max-height: 400px; background: #000; border-radius: 12px;">
-                        <source src="{{ workflow.output_video.url }}" type="video/mp4">
-                    </video>
-                {% endif %}
-
-                <!-- Footer: AI Model + Modern Reactions -->
-                <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                    <span class="badge bg-secondary">{{ workflow.ai_model }}</span>
-                    
-                    <!-- MODERN ACTION BUTTONS -->
-                    <div class="d-flex align-items-center gap-2">
-                        <!-- Upvote -->
-                        <form action="{% url 'upvote' workflow.pk %}" method="POST" class="upvote-form d-inline m-0">
-                            {% csrf_token %}
-                            <button type="submit" class="action-btn upvote-btn {% if workflow.pk in upvoted_ids %}active{% endif %}">
-                                <i class="bi {% if workflow.pk in upvoted_ids %}bi-arrow-up-fill{% else %}bi-arrow-up{% endif %}"></i>
-                                <span class="upvote-count">{{ workflow.total_upvotes }}</span>
-                            </button>
-                        </form>
-
-                        <!-- Love -->
-                        <form action="{% url 'toggle_love' workflow.pk %}" method="POST" class="love-form d-inline m-0">
-                            {% csrf_token %}
-                            <button type="submit" class="action-btn love-btn {% if workflow.pk in loved_ids %}active{% endif %}">
-                                <i class="bi {% if workflow.pk in loved_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
-                                <span class="love-count">{{ workflow.love_reactions.count }}</span>
-                            </button>
-                        </form>
-
-                        <!-- Comment -->
-                        <a href="{% url 'detail' workflow.pk %}" class="action-btn comment-btn text-decoration-none">
-                            <i class="bi bi-chat"></i>
-                            <span>{{ workflow.comments.count }}</span>
-                        </a>
-
-                        <!-- Bookmark -->
-                        <form action="{% url 'toggle_bookmark' workflow.pk %}" method="POST" class="bookmark-form d-inline m-0">
-                            {% csrf_token %}
-                            <button type="submit" class="action-btn bookmark-btn {% if workflow.pk in bookmarked_ids %}active{% endif %}">
-                                <i class="bi {% if workflow.pk in bookmarked_ids %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
-                            </button>
-                        </form>
-
-                        <!-- NEW: View Details Button -->
-                        <a href="{% url 'detail' workflow.pk %}" class="action-btn text-decoration-none" style="color: #6f42c1; font-weight: 600;">
-                            <i class="bi bi-arrow-right-circle"></i>
-                            <span>View</span>
-                        </a>
-                    </div>
-                </div>
+        <!-- Loading spinner (brand purple) -->
+        <div id="feed-loader" class="text-center my-4" hidden>
+            <div class="spinner-border" style="color: #6f42c1;" role="status"></div>
+            <div class="text-muted small mt-2">
+                <i class="bi bi-lightning-charge-fill" style="color: #6f42c1;"></i> Forging more prompts…
             </div>
         </div>
-        
-        {% empty %}
-            <div class="text-center text-muted py-5">
-                <p class="mb-0">No workflows yet. Be the first to post!</p>
+
+        <!-- Error + retry -->
+        <div id="feed-error" class="alert alert-warning text-center" hidden>
+            Couldn't load more prompts.
+            <button id="feed-retry" class="btn btn-sm btn-outline-secondary ms-2">Try again</button>
+        </div>
+
+        {% if page_obj.has_next %}
+            <!-- Invisible tripwire: when this scrolls into view, load the next page -->
+            <div id="feed-sentinel" style="height: 1px;"
+                 data-next-url="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if model_filter %}&model={{ model_filter|urlencode }}{% endif %}"></div>
+
+            <!-- Manual fallback (also works with JavaScript disabled) -->
+            <div class="text-center mt-2 mb-5" id="load-more-wrap">
+                <a id="load-more-btn"
+                   href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if model_filter %}&model={{ model_filter|urlencode }}{% endif %}"
+                   class="btn btn-outline-primary rounded-pill px-4 py-2 shadow-sm">
+                    Load More Prompts <i class="bi bi-arrow-down-circle ms-2"></i>
+                </a>
             </div>
-        {% endfor %}
+
+            <div id="feed-end" class="text-center text-muted mt-4 mb-5" hidden>
+                <small>You've reached the end of the feed! 🎉</small>
+            </div>
+        {% else %}
+            {% if page_obj.object_list %}
+            <div class="text-center text-muted mt-4 mb-5">
+                <small>You've reached the end of the feed! 🎉</small>
+            </div>
+            {% endif %}
+        {% endif %}
 
     </div>
 </div>
+
+<script>
+(function () {
+    const container = document.getElementById('feed-container');
+    const sentinel  = document.getElementById('feed-sentinel');
+    const loader    = document.getElementById('feed-loader');
+    const errorBox  = document.getElementById('feed-error');
+    const retryBtn  = document.getElementById('feed-retry');
+    const endMsg    = document.getElementById('feed-end');
+    const wrap      = document.getElementById('load-more-wrap');
+    const btn       = document.getElementById('load-more-btn');
+    if (!container || !sentinel) return;
+
+    let nextUrl = sentinel.dataset.nextUrl || '';
+    let loading = false;
+    let done = !nextUrl;
+    let observer = null;
+    const btnDefault = btn ? btn.innerHTML : '';
+
+    function finish() {
+        done = true;
+        if (observer) observer.disconnect();
+        sentinel.hidden = true;
+        if (wrap) wrap.hidden = true;
+        if (endMsg) endMsg.hidden = false;
+    }
+
+    async function loadMore() {
+        if (loading || done || !nextUrl) return;
+        loading = true;
+        loader.hidden = false;
+        errorBox.hidden = true;
+        if (btn) { btn.classList.add('disabled'); btn.innerHTML = 'Loading…'; }
+
+        try {
+            const res = await fetch(nextUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            container.insertAdjacentHTML('beforeend', data.html);
+            nextUrl = data.next_url || '';
+            sentinel.dataset.nextUrl = nextUrl;
+            if (!data.has_next) finish();
+        } catch (err) {
+            console.error('Infinite scroll error:', err);
+            errorBox.hidden = false;
+        } finally {
+            loading = false;
+            loader.hidden = true;
+            if (btn && !done) { btn.classList.remove('disabled'); btn.innerHTML = btnDefault; }
+            // Re-arm the tripwire so short pages keep filling the screen
+            if (observer && !done) { observer.unobserve(sentinel); observer.observe(sentinel); }
+        }
+    }
+
+    if ('IntersectionObserver' in window) {
+        observer = new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting) loadMore();
+        }, { rootMargin: '400px 0px' }); // start loading BEFORE the user hits the bottom
+        observer.observe(sentinel);
+    }
+
+    if (btn) btn.addEventListener('click', function (e) { e.preventDefault(); loadMore(); });
+    if (retryBtn) retryBtn.addEventListener('click', loadMore);
+})();
+</script>
 {% endblock %}

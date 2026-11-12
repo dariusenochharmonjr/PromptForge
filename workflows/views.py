@@ -5,14 +5,15 @@ from django.db.models import Q, Count
 from django.http import JsonResponse 
 from django.utils import timezone
 from datetime import timedelta
+from django.core.paginator import Paginator
+from django.template.loader import render_to_string
 
 from .models import Workflow, Upvote, Profile, Follow, LoveReaction, Comment, Notification, Bookmark
 from .forms import WorkflowForm, UserUpdateForm, ProfileUpdateForm, CommentForm
 
-
-# --- FEED & SEARCH ---
+# FEED AND SEARCH
 def feed_view(request):
-    workflows = Workflow.objects.all()
+    workflows = Workflow.objects.all().order_by('-created_at')
     search_query = request.GET.get('q', '')
     model_filter = request.GET.get('model', '')
 
@@ -21,21 +22,35 @@ def feed_view(request):
     if model_filter:
         workflows = workflows.filter(ai_model=model_filter)
 
-    loved_ids = []
-    upvoted_ids = []
-    bookmarked_ids = []
-    following_usernames = []
-    
+    paginator = Paginator(workflows, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    loved_ids, upvoted_ids, bookmarked_ids, following_usernames = [], [], [], []
     if request.user.is_authenticated:
-        loved_ids = list(LoveReaction.objects.filter(user=request.user, workflow__in=workflows).values_list('workflow_id', flat=True))
-        upvoted_ids = list(Upvote.objects.filter(user=request.user, workflow__in=workflows).values_list('workflow_id', flat=True))
-        bookmarked_ids = list(Bookmark.objects.filter(user=request.user, workflow__in=workflows).values_list('workflow_id', flat=True))
+        loved_ids = list(LoveReaction.objects.filter(user=request.user, workflow__in=page_obj.object_list).values_list('workflow_id', flat=True))
+        upvoted_ids = list(Upvote.objects.filter(user=request.user, workflow__in=page_obj.object_list).values_list('workflow_id', flat=True))
+        bookmarked_ids = list(Bookmark.objects.filter(user=request.user, workflow__in=page_obj.object_list).values_list('workflow_id', flat=True))
         following_usernames = list(Follow.objects.filter(follower=request.user).values_list('following__username', flat=True))
 
-    return render(request, 'workflows/feed.html', {
-        'workflows': workflows, 'search_query': search_query, 'model_filter': model_filter,
-        'loved_ids': loved_ids, 'upvoted_ids': upvoted_ids, 'bookmarked_ids': bookmarked_ids, 'following_usernames': following_usernames
-    })
+    context = {
+        'workflows': page_obj, 'page_obj': page_obj,
+        'search_query': search_query, 'model_filter': model_filter,
+        'loved_ids': loved_ids, 'upvoted_ids': upvoted_ids,
+        'bookmarked_ids': bookmarked_ids, 'following_usernames': following_usernames,
+    }
+
+    # Infinite scroll: return ONLY the new cards as JSON (no full page)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        html = render_to_string('workflows/_workflow_cards.html', context, request=request)
+        next_url = ''
+        if page_obj.has_next():
+            params = request.GET.copy()
+            params['page'] = page_obj.next_page_number()
+            next_url = f'{request.path}?{params.urlencode()}'
+        return JsonResponse({'html': html, 'has_next': page_obj.has_next(), 'next_url': next_url})
+
+    return render(request, 'workflows/feed.html', context)
 
 
 # --- TRENDING FEED ---
@@ -294,3 +309,58 @@ def notifications_view(request):
     notifications = Notification.objects.filter(recipient=request.user)
     notifications.filter(is_read=False).update(is_read=True)
     return render(request, 'workflows/notifications.html', {'notifications': notifications})
+
+# --- Comments v2: replies + likes ---
+from django.template.loader import render_to_string as _render_to_string
+from .models import Reply as _Reply, CommentLike as _CommentLike
+
+
+def _comment_text_field():
+    names = {f.name for f in Comment._meta.fields}
+    for cand in ("text", "content", "body", "message", "comment"):
+        if cand in names:
+            return cand
+    return "text"
+
+
+@login_required
+def post_comment_view(request, pk):
+    workflow = get_object_or_404(Workflow, pk=pk)
+    if request.method == 'POST':
+        text = (request.POST.get('text') or '').strip()
+        if text:
+            kwargs = {'workflow': workflow, 'author': request.user, _comment_text_field(): text}
+            comment = Comment.objects.create(**kwargs)
+            if workflow.author != request.user:
+                Notification.objects.create(recipient=workflow.author, actor=request.user, verb='commented on your prompt', target=workflow)
+    return redirect('detail', pk=workflow.pk)
+
+
+@login_required
+def post_reply_view(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    if request.method == 'POST':
+        text = (request.POST.get('text') or '').strip()
+        if text:
+            reply = _Reply.objects.create(comment=comment, author=request.user, text=text)
+            if comment.author != request.user:
+                Notification.objects.create(recipient=comment.author, actor=request.user, verb='replied to your comment', target=comment.workflow)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                html = _render_to_string('workflows/_reply.html', {'reply': reply}, request=request)
+                return JsonResponse({'html': html, 'count': comment.replies.count()})
+    return redirect('detail', pk=comment.workflow.pk)
+
+
+@login_required
+def like_comment_view(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    existing = _CommentLike.objects.filter(user=request.user, comment=comment).first()
+    if existing:
+        existing.delete()
+        is_liked = False
+    else:
+        _CommentLike.objects.create(user=request.user, comment=comment)
+        is_liked = True
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'is_liked': is_liked, 'like_count': comment.likes.count()})
+    return redirect('detail', pk=comment.workflow.pk)

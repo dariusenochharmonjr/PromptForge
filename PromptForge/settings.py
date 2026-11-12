@@ -144,15 +144,28 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (Images, Videos via Cloudinary)
-cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
-    secure=True,
-    api_proxy='http://proxy.server:3128'  # <--- ADD THIS LINE FOR PYTHONANYWHERE FREE TIER
-)
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-JAZZMIN_SETTINGS = { #Jazzmin Admin Theme Settings
+# Media files: Cloudinary when keys exist (production), local folder otherwise (development).
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+        api_proxy='http://proxy.server:3128',  # PythonAnywhere free-tier proxy
+    )
+    MEDIA_STORAGE_BACKEND = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    MEDIA_STORAGE_BACKEND = 'django.core.files.storage.FileSystemStorage'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+JAZZMIN_SETTINGS = {
     "site_title": "PromptForge Admin",
     "site_header": "PromptForge",
     "site_brand": "PromptForge",
@@ -163,11 +176,8 @@ JAZZMIN_SETTINGS = { #Jazzmin Admin Theme Settings
         {"name": "View Site", "url": "/", "new_window": True},
     ],
 }
+
 STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
+    "default": {"BACKEND": MEDIA_STORAGE_BACKEND},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }

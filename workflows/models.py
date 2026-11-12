@@ -135,3 +135,31 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     Profile.objects.get_or_create(user=instance)
+
+# --- Comment replies & likes ---
+from django.conf import settings as _dj_settings
+
+if "CommentLike" not in globals():
+    class CommentLike(models.Model):
+        user = models.ForeignKey(_dj_settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        comment = models.ForeignKey("Comment", on_delete=models.CASCADE, related_name="likes")
+        created_at = models.DateTimeField(auto_now_add=True)
+
+        class Meta:
+            unique_together = ("user", "comment")
+
+        def __str__(self):
+            return f"{self.user} likes comment {self.comment_id}"
+
+if "Reply" not in globals():
+    class Reply(models.Model):
+        comment = models.ForeignKey("Comment", on_delete=models.CASCADE, related_name="replies")
+        author = models.ForeignKey(_dj_settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        text = models.TextField()
+        created_at = models.DateTimeField(auto_now_add=True)
+
+        class Meta:
+            ordering = ["created_at"]
+
+        def __str__(self):
+            return f"{self.author} replied to comment {self.comment_id}"
