@@ -1,0 +1,178 @@
+{% extends 'workflows/base.html' %}
+{% block title %}PromptForge — Prompts that actually work{% endblock %}
+{% block content %}
+{% url 'signup' as signup_url %}
+{% url 'login' as login_url %}
+<style>
+    .pf-bleed{margin-left:calc(50% - 50vw);width:100vw;}
+    .pf-hero{position:relative;overflow:hidden;background:#14101f;color:#fff;padding:96px 0 88px;}
+    .pf-hero::before{content:"";position:absolute;inset:-20%;background:
+        radial-gradient(38% 42% at 18% 22%,rgba(111,66,193,.55),transparent 60%),
+        radial-gradient(34% 38% at 82% 18%,rgba(255,77,141,.38),transparent 60%),
+        radial-gradient(40% 44% at 62% 88%,rgba(255,176,32,.22),transparent 60%);
+        filter:blur(10px);animation:pfDrift 18s ease-in-out infinite alternate;}
+    @keyframes pfDrift{from{transform:translate3d(-2%,-1%,0) scale(1)}to{transform:translate3d(2%,2%,0) scale(1.06)}}
+    .pf-hero::after{content:"";position:absolute;inset:0;opacity:.05;pointer-events:none;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");}
+    .pf-inner{position:relative;z-index:2;max-width:1140px;margin:0 auto;padding:0 24px;}
+    .pf-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#ffb020;border:1px solid rgba(255,176,32,.4);border-radius:99px;padding:6px 14px;background:rgba(255,176,32,.08);}
+    .pf-h1{font-size:clamp(2.4rem,5.4vw,4.2rem);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin:22px 0 18px;}
+    .pf-h1 em{font-style:normal;background:linear-gradient(90deg,#a78bfa,#ff4d8d,#ffb020);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .pf-sub{font-size:1.12rem;line-height:1.65;color:rgba(255,255,255,.78);max-width:52ch;}
+    .pf-cta{display:inline-flex;align-items:center;gap:10px;border-radius:99px;padding:14px 28px;font-weight:700;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease;}
+    .pf-cta-primary{background:linear-gradient(90deg,#6f42c1,#ff4d8d);color:#fff;box-shadow:0 12px 34px rgba(111,66,193,.45);}
+    .pf-cta-primary:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(255,77,141,.45);color:#fff;}
+    .pf-cta-ghost{border:1px solid rgba(255,255,255,.28);color:#fff;}
+    .pf-cta-ghost:hover{background:rgba(255,255,255,.1);color:#fff;transform:translateY(-2px);}
+    .pf-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:20px;backdrop-filter:blur(14px);padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:pfFloat 7s ease-in-out infinite;}
+    @keyframes pfFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    .pf-card pre{white-space:pre-wrap;font-family:'Courier New',monospace;font-size:.86rem;line-height:1.6;color:#e9e4ff;background:rgba(0,0,0,.35);border-radius:12px;padding:16px;max-height:220px;overflow:auto;}
+    .pf-card pre::-webkit-scrollbar{width:6px;}
+    .pf-card pre::-webkit-scrollbar-thumb{background:#6f42c1;border-radius:99px;}
+    .pf-proof{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:44px;}
+    .pf-avatars{display:flex;}
+    .pf-avatars img,.pf-avatars .ini{width:42px;height:42px;border-radius:50%;border:3px solid #14101f;object-fit:cover;margin-left:-12px;display:flex;align-items:center;justify-content:center;font-weight:700;background:#6f42c1;color:#fff;}
+    .pf-avatars > *:first-child{margin-left:0;}
+    .pf-stat{font-weight:800;font-size:1.3rem;}
+    .pf-stat small{display:block;font-weight:500;font-size:.76rem;color:rgba(255,255,255,.6);letter-spacing:.06em;text-transform:uppercase;}
+    .pf-section{padding:76px 0;}
+    .pf-kicker{font-size:.78rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#6f42c1;}
+    .pf-h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:800;letter-spacing:-.01em;margin:10px 0 14px;}
+    .pf-step{border:1px solid #ece7f8;border-radius:18px;padding:26px;height:100%;background:#fff;transition:transform .2s ease,box-shadow .2s ease;}
+    .pf-step:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(111,66,193,.14);}
+    .pf-step .num{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#6f42c1,#ff4d8d);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+    [data-bs-theme="dark"] .pf-step{background:#232323;border-color:#3a3a3a;}
+    .pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+    .pf-prompt{border:1px solid #ece7f8;border-radius:18px;padding:22px;background:#fff;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:12px;transition:transform .2s ease,box-shadow .2s ease;}
+    .pf-prompt:hover{transform:translateY(-6px);box-shadow:0 22px 48px rgba(111,66,193,.16);color:inherit;}
+    [data-bs-theme="dark"] .pf-prompt{background:#232323;border-color:#3a3a3a;}
+    .pf-band{background:linear-gradient(120deg,#6f42c1,#ff4d8d 60%,#ffb020);color:#fff;padding:72px 0;text-align:center;}
+    .rv{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease;}
+    .rv.in{opacity:1;transform:none;}
+    a:focus-visible,button:focus-visible{outline:3px solid #ffb020;outline-offset:3px;border-radius:8px;}
+    @media (prefers-reduced-motion:reduce){.pf-hero::before,.pf-card{animation:none}.rv{opacity:1;transform:none;transition:none}}
+    @media (max-width:900px){.pf-hero{padding:64px 0}.pf-hero-grid{grid-template-columns:1fr!important}}
+</style>
+
+<section class="pf-bleed pf-hero">
+    <div class="pf-inner">
+        <div class="pf-hero-grid" style="display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;">
+            <div>
+                <span class="pf-eyebrow"><i class="bi bi-lightning-charge-fill"></i> The prompt library built by real people</span>
+                <h1 class="pf-h1">Stop guessing.<br>Start with prompts that <em>actually work.</em></h1>
+                <p class="pf-sub">PromptForge is where creators share the exact prompts behind their results — copy one, remix it, and post your own. Free to join, forever.</p>
+                <div class="d-flex gap-3 flex-wrap mt-4">
+                    <a class="pf-cta pf-cta-primary" href="{{ signup_url|default:'/accounts/signup/' }}"><i class="bi bi-person-plus-fill"></i> Join free</a>
+                    <a class="pf-cta pf-cta-ghost" href="{% url 'trending' %}"><i class="bi bi-graph-up-arrow"></i> Browse live prompts</a>
+                </div>
+                <div class="pf-proof">
+                    <div class="pf-avatars">
+                        {% for a in authors %}
+                            {% if a.profile.profile_picture %}<img src="{{ a.profile.profile_picture.url }}" alt="{{ a.username }}">
+                            {% else %}<span class="ini">{{ a.username|first|upper }}</span>{% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="pf-stat"><span data-count="{{ stats.members }}">0</span><small>members</small></div>
+                    <div class="pf-stat"><span data-count="{{ stats.prompts }}">0</span><small>prompts</small></div>
+                    <div class="pf-stat"><span data-count="{{ stats.models }}">0</span><small>AI models</small></div>
+                </div>
+            </div>
+            <div>
+                {% if hero %}
+                <div class="pf-card">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge rounded-pill" style="background:#6f42c1;">{{ hero.ai_model }}</span>
+                        <span class="small" style="color:rgba(255,255,255,.7);">by @{{ hero.author.username }}</span>
+                        <button class="btn btn-sm btn-light rounded-pill ms-auto" id="pf-copy" data-prompt="{{ hero.prompt_text }}"><i class="bi bi-clipboard me-1"></i>Copy</button>
+                    </div>
+                    <div class="fw-bold mb-2">{{ hero.title }}</div>
+                    <pre id="pf-hero-prompt">{{ hero.prompt_text }}</pre>
+                    <div class="d-flex gap-3 mt-3 small" style="color:rgba(255,255,255,.7);">
+                        <span><i class="bi bi-heart-fill me-1" style="color:#ff4d8d;"></i>{{ hero.love_reactions.count }}</span>
+                        <span><i class="bi bi-arrow-up-circle-fill me-1" style="color:#ffb020;"></i>{{ hero.total_upvotes }}</span>
+                        <span><i class="bi bi-chat-fill me-1" style="color:#a78bfa;"></i>{{ hero.comments.count }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pf-section">
+    <div class="pf-inner" style="max-width:1140px;margin:0 auto;padding:0 24px;">
+        <div class="rv"><span class="pf-kicker">How it works</span><h2 class="pf-h2">Three steps from stuck to shipping.</h2></div>
+        <div class="row g-4 mt-1">
+            <div class="col-md-4 rv"><div class="pf-step"><div class="num">1</div><h5 class="fw-bold">Copy a proven prompt</h5><p class="text-muted mb-0">Every post shows the exact prompt, the model it ran on, and the result it produced. One click copies it.</p></div></div>
+            <div class="col-md-4 rv"><div class="pf-step"><div class="num">2</div><h5 class="fw-bold">Make it yours</h5><p class="text-muted mb-0">Adapt it to your project, then share your version. Credit flows back to the original creator automatically.</p></div></div>
+            <div class="col-md-4 rv"><div class="pf-step"><div class="num">3</div><h5 class="fw-bold">Grow your audience</h5><p class="text-muted mb-0">Followers get notified the moment you post. Your best work rises on Trending.</p></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="pf-section" style="background:#faf8ff;">
+    <div style="max-width:1140px;margin:0 auto;padding:0 24px;">
+        <div class="rv d-flex justify-content-between align-items-end flex-wrap gap-3">
+            <div><span class="pf-kicker">Loved by the community</span><h2 class="pf-h2 mb-0">Prompts people keep coming back to.</h2></div>
+            <a href="{% url 'trending' %}" class="btn btn-outline-primary rounded-pill px-4">See all trending</a>
+        </div>
+        <div class="pf-grid mt-4">
+            {% for w in featured %}
+            <a class="pf-prompt rv" href="{% url 'detail' w.pk %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary">{{ w.ai_model }}</span>
+                    <span class="text-muted small">{{ w.created_at|timesince }} ago</span>
+                </div>
+                <div class="fw-bold fs-5">{{ w.title }}</div>
+                <div class="text-muted small">{{ w.description|truncatewords:18 }}</div>
+                <div class="d-flex align-items-center gap-3 mt-auto pt-2 small text-muted">
+                    <span>@{{ w.author.username }}</span>
+                    <span class="ms-auto"><i class="bi bi-heart-fill me-1" style="color:#ff4d8d;"></i>{{ w.love_reactions.count }}</span>
+                    <span><i class="bi bi-chat-fill me-1" style="color:#6f42c1;"></i>{{ w.comments.count }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="pf-bleed pf-band">
+    <div class="pf-inner rv">
+        <h2 class="fw-bold" style="font-size:clamp(1.8rem,3.6vw,2.8rem);">Your next great result starts with someone else's prompt.</h2>
+        <p class="mb-4" style="opacity:.9;">Join {{ stats.members }} creators sharing what actually works.</p>
+        <a class="pf-cta" style="background:#14101f;color:#fff;" href="{{ signup_url|default:'/accounts/signup/' }}"><i class="bi bi-lightning-charge-fill"></i> Create your free account</a>
+        <div class="mt-3 small" style="opacity:.85;">Already a member? <a href="{{ login_url|default:'/accounts/login/' }}" style="color:#fff;font-weight:700;">Log in</a></div>
+    </div>
+</section>
+
+<script>
+(function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: .15 });
+    document.querySelectorAll('.rv').forEach(function (el) { reduce ? el.classList.add('in') : io.observe(el); });
+
+    document.querySelectorAll('[data-count]').forEach(function (el) {
+        var target = parseInt(el.dataset.count, 10) || 0;
+        if (reduce) { el.textContent = target; return; }
+        var t0 = null;
+        function step(ts) {
+            if (!t0) t0 = ts;
+            var p = Math.min((ts - t0) / 1200, 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    });
+
+    var copy = document.getElementById('pf-copy');
+    if (copy) copy.addEventListener('click', function () {
+        navigator.clipboard.writeText(copy.dataset.prompt).then(function () {
+            copy.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!';
+            setTimeout(function () { copy.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
+        });
+    });
+})();
+</script>
+{% endblock %}

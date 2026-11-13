@@ -16,6 +16,28 @@ from .forms import WorkflowForm, UserUpdateForm, ProfileUpdateForm, CommentForm
 
 # FEED AND SEARCH
 def feed_view(request):
+    if not request.user.is_authenticated:
+        recent = list(Workflow.objects.select_related('author').order_by('-created_at')[:40])
+        featured = list(Workflow.objects.annotate(love_count=Count('love_reactions'))
+                        .order_by('-love_count', '-created_at')[:6])
+        authors, seen_a = [], set()
+        for w in recent:
+            if w.author_id not in seen_a:
+                seen_a.add(w.author_id)
+                authors.append(w.author)
+            if len(authors) >= 5:
+                break
+        return render(request, 'workflows/landing.html', {
+            'featured': featured,
+            'authors': authors,
+            'hero': featured[0] if featured else None,
+            'stats': {
+                'members': User.objects.count(),
+                'prompts': Workflow.objects.count(),
+                'models': Workflow.objects.values('ai_model').distinct().count(),
+            },
+        })
+
     workflows = Workflow.objects.all().order_by('-created_at')
     search_query = request.GET.get('q', '')
     model_filter = request.GET.get('model', '')
@@ -54,7 +76,6 @@ def feed_view(request):
         return JsonResponse({'html': html, 'has_next': page_obj.has_next(), 'next_url': next_url})
 
     return render(request, 'workflows/feed.html', context)
-
 
 # --- TRENDING FEED ---
 def trending_view(request):

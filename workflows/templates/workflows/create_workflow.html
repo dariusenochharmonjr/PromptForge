@@ -1,141 +1,258 @@
 {% extends 'workflows/base.html' %}
 
-{% block title %}Create New Prompt - PromptForge{% endblock %}
+{% block title %}Prompt Studio - PromptForge{% endblock %}
 
 {% block content %}
+<style>
+    #studio-form input[type="text"], #studio-form textarea, #studio-form select {
+        width: 100%; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px;
+        padding: 12px 16px; font-size: 1rem; color: #212529; transition: all .2s ease;
+    }
+    #studio-form textarea { min-height: 110px; }
+    #studio-form textarea[name="prompt_text"] { font-family: 'Courier New', Courier, monospace; min-height: 220px; line-height: 1.6; }
+    #studio-form input:focus, #studio-form textarea:focus, #studio-form select:focus {
+        background: #fff; border-color: #6f42c1; box-shadow: 0 0 0 4px rgba(111,66,193,.15); outline: none;
+    }
+    [data-bs-theme="dark"] #studio-form input, [data-bs-theme="dark"] #studio-form textarea, [data-bs-theme="dark"] #studio-form select {
+        background: #2c2c2c; border-color: #444; color: #e0e0e0;
+    }
+    [data-bs-theme="dark"] #studio-form input:focus, [data-bs-theme="dark"] #studio-form textarea:focus, [data-bs-theme="dark"] #studio-form select:focus {
+        background: #333; border-color: #a78bfa; box-shadow: 0 0 0 4px rgba(167,139,250,.15);
+    }
+    .studio-preview { position: sticky; top: 110px; }
+    .studio-stat { background: #f3e8ff; color: #6f42c1; border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: .85rem; }
+    [data-bs-theme="dark"] .studio-stat { background: #2a1a3a; color: #a78bfa; }
+    .pv-media img, .pv-media video { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; }
+</style>
+
 <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-7">
-        
+    <div class="col-lg-11">
+
         <!-- Header -->
-        <div class="mb-4">
-            <a href="{% url 'feed' %}" class="btn btn-sm btn-outline-secondary mb-3">
-                &larr; Back to Feed
-            </a>
-            <h1 class="h3 fw-bold mb-2">Create New Prompt</h1>
-            <p class="text-muted mb-0">Share your best AI prompt with the community.</p>
-        </div>
-
-        <!-- Creation Card -->
-        <div class="card shadow-sm">
-            <div class="card-body p-4 p-md-5">
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    <!-- Title -->
-                    <div class="mb-4">
-                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Title</label>
-                        {{ form.title }}
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Description</label>
-                        {{ form.description }}
-                        <div class="form-text">Explain what this prompt does and how to use it.</div>
-                    </div>
-
-                    <!-- AI Model -->
-                    <div class="mb-4">
-                        <label for="{{ form.ai_model.id_for_label }}" class="form-label fw-bold">AI Model</label>
-                        {{ form.ai_model }}
-                    </div>
-
-                    <!-- The Prompt Text -->
-                    <div class="mb-4">
-                        <label for="{{ form.prompt_text.id_for_label }}" class="form-label fw-bold">The Prompt</label>
-                        {{ form.prompt_text }}
-                        <div class="form-text">The actual text you feed into the AI.</div>
-                    </div>
-
-                    <!-- MODERN Image Upload -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Output Image (Optional)</label>
-                        <div class="file-upload-wrapper" id="file-upload-wrapper">
-                            <input type="file" name="output_image" id="id_output_image" class="file-upload-input" accept="image/*">
-                            <div class="file-upload-label">
-                                <i class="bi bi-cloud-arrow-up"></i>
-                                <div class="upload-text" id="upload-text">Click to upload an image</div>
-                                <div class="upload-hint">SVG, PNG, JPG or GIF (max. 5MB)</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MODERN Video Upload -->
-                    <div class="mb-5">
-                        <label class="form-label fw-bold">Output Video (Optional)</label>
-                        <div class="file-upload-wrapper" id="video-upload-wrapper">
-                            <input type="file" name="output_video" id="id_output_video" class="file-upload-input" accept="video/*">
-                            <div class="file-upload-label">
-                                <i class="bi bi-film"></i>
-                                <div class="upload-text" id="video-upload-text">Click to upload a video</div>
-                                <div class="upload-hint">MP4, MOV, or WebM (max. 50MB)</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                        <a href="{% url 'feed' %}" class="btn btn-outline-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg me-2"></i> Publish Prompt
-                        </button>
-                    </div>
-                </form>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="{% url 'feed' %}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to Feed</a>
+                <h1 class="h3 fw-bold mb-1"><i class="bi bi-lightning-charge-fill me-2" style="color:#6f42c1;"></i>Prompt Studio</h1>
+                <p class="text-muted mb-0">Share your best AI prompt with the community.</p>
             </div>
         </div>
 
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" id="studio-form">
+            {% csrf_token %}
+            <div class="row g-4">
+
+                <!-- LEFT: the form -->
+                <div class="col-lg-7">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4 p-md-5">
+
+                            <div class="mb-4">
+                                <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Title</label>
+                                {{ form.title }}
+                                {% for e in form.title.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Description</label>
+                                {{ form.description }}
+                                <div class="form-text">Explain what this prompt does and how to use it.</div>
+                                {% for e in form.description.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="{{ form.ai_model.id_for_label }}" class="form-label fw-bold">AI Model</label>
+                                {{ form.ai_model }}
+                                {% for e in form.ai_model.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="{{ form.prompt_text.id_for_label }}" class="form-label fw-bold">The Prompt</label>
+                                {{ form.prompt_text }}
+                                <div class="form-text">The actual text you feed into the AI.</div>
+                                {% for e in form.prompt_text.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Output Image (Optional)</label>
+                                <div class="file-upload-wrapper" id="file-upload-wrapper">
+                                    <input type="file" name="output_image" id="id_output_image" class="file-upload-input" accept="image/*">
+                                    <div class="file-upload-label">
+                                        <i class="bi bi-cloud-arrow-up"></i>
+                                        <div class="upload-text" id="upload-text">Click to upload an image</div>
+                                        <div class="upload-hint">SVG, PNG, JPG or GIF (max. 5MB)</div>
+                                    </div>
+                                </div>
+                                {% for e in form.output_image.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Output Video (Optional)</label>
+                                <div class="file-upload-wrapper" id="video-upload-wrapper">
+                                    <input type="file" name="output_video" id="id_output_video" class="file-upload-input" accept="video/*">
+                                    <div class="file-upload-label">
+                                        <i class="bi bi-film"></i>
+                                        <div class="upload-text" id="video-upload-text">Click to upload a video</div>
+                                        <div class="upload-hint">MP4, MOV, or WebM (max. 50MB)</div>
+                                    </div>
+                                </div>
+                                {% for e in form.output_video.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <a href="{% url 'feed' %}" class="btn btn-outline-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-2"></i> Publish Prompt
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: live preview + quality coach -->
+                <div class="col-lg-5">
+                    <div class="card studio-preview shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="text-muted small fw-semibold mb-3"><i class="bi bi-eye me-1"></i>LIVE PREVIEW</div>
+                            <div class="d-flex align-items-center mb-3">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white me-2" style="width:40px;height:40px;">{{ user.username|first|upper }}</div>
+                                {% endif %}
+                                <div class="fw-bold">@{{ user.username }}</div>
+                            </div>
+                            <h5 class="fw-bold mb-2" id="pv-title">Your prompt title</h5>
+                            <span class="badge bg-primary mb-3" id="pv-model">AI Model</span>
+                            <p class="text-muted small" id="pv-desc">Your description appears here.</p>
+                            <div class="bg-light p-3 rounded border mb-3" style="max-height:200px;overflow:auto;">
+                                <pre class="mb-0" style="white-space:pre-wrap;font-family:'Courier New',monospace;font-size:.85rem;" id="pv-prompt">Your prompt text appears here as you type.</pre>
+                            </div>
+                            <div class="pv-media mb-3">
+                                <img id="pv-image" hidden alt="Output preview">
+                                <video id="pv-video" hidden controls muted playsinline></video>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="studio-stat"><span id="pv-chars">0</span> chars</span>
+                                <span class="studio-stat"><span id="pv-words">0</span> words</span>
+                                <span class="studio-stat">~<span id="pv-tokens">0</span> tokens</span>
+                            </div>
+
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-semibold small"><i class="bi bi-clipboard-check me-1" style="color:#6f42c1;"></i>Prompt quality</span>
+                                    <span class="badge rounded-pill" id="q-label" style="background:#ef4444;">Needs work</span>
+                                </div>
+                                <div style="height:8px;border-radius:99px;background:#e9ecef;overflow:hidden;">
+                                    <div id="q-bar" style="height:100%;width:0;background:#ef4444;border-radius:99px;transition:width .3s ease,background .3s ease;"></div>
+                                </div>
+                                <ul class="list-unstyled small mt-3 mb-0" id="q-list" style="display:grid;gap:6px;"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- JavaScript for Modern File Uploads -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        // --- Image Upload Logic ---
-        const fileInput = document.getElementById('id_output_image');
-        const uploadWrapper = document.getElementById('file-upload-wrapper');
-        const uploadText = document.getElementById('upload-text');
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('studio-form');
+    if (!form) return;
+    function get(n) { return form.querySelector('[name="' + n + '"]'); }
+    var title = get('title'), desc = get('description'), prompt = get('prompt_text'), model = get('ai_model');
+    var pvT = document.getElementById('pv-title'), pvD = document.getElementById('pv-desc'),
+        pvP = document.getElementById('pv-prompt'), pvM = document.getElementById('pv-model'),
+        pvC = document.getElementById('pv-chars'), pvW = document.getElementById('pv-words'),
+        pvK = document.getElementById('pv-tokens'),
+        pvI = document.getElementById('pv-image'), pvV = document.getElementById('pv-video');
 
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    uploadText.textContent = this.files[0].name;
-                    uploadWrapper.classList.add('has-file');
-                    const icon = uploadWrapper.querySelector('i');
-                    icon.classList.remove('bi-cloud-arrow-up');
-                    icon.classList.add('bi-check-circle-fill');
-                } else {
-                    uploadText.textContent = 'Click to upload an image';
-                    uploadWrapper.classList.remove('has-file');
-                    const icon = uploadWrapper.querySelector('i');
-                    icon.classList.remove('bi-check-circle-fill');
-                    icon.classList.add('bi-cloud-arrow-up');
-                }
-            });
-        }
+    var rules = [
+        { t: 'A specific, descriptive title', f: function (v) { return v.title.trim().length >= 8 && !/^(my first prompt|test|untitled)$/i.test(v.title.trim()); } },
+        { t: 'Description explains the result (40+ chars)', f: function (v) { return v.description.trim().length >= 40; } },
+        { t: 'Prompt is substantial (120+ chars)', f: function (v) { return v.prompt_text.trim().length >= 120; } },
+        { t: 'Assigns a role ("You are…", "Act as…")', f: function (v) { return /you are|act as|as a senior|as an expert/i.test(v.prompt_text); } },
+        { t: 'States output format or constraints', f: function (v) { return /format|return|output|must|do not|limit|steps|json|table/i.test(v.prompt_text); } },
+        { t: 'Includes an example', f: function (v) { return /example|e\.g\.|for instance|sample/i.test(v.prompt_text); } }
+    ];
+    var qBar = document.getElementById('q-bar'), qLabel = document.getElementById('q-label'), qList = document.getElementById('q-list');
 
-        // --- Video Upload Logic ---
-        const videoInput = document.getElementById('id_output_video');
-        const videoWrapper = document.getElementById('video-upload-wrapper');
-        const videoText = document.getElementById('video-upload-text');
+    function refresh() {
+        var v = {
+            title: title ? title.value : '',
+            description: desc ? desc.value : '',
+            prompt_text: prompt ? prompt.value : ''
+        };
+        pvT.textContent = v.title || 'Your prompt title';
+        pvD.textContent = v.description || 'Your description appears here.';
+        pvP.textContent = v.prompt_text || 'Your prompt text appears here as you type.';
+        pvM.textContent = (model && model.value) || 'AI Model';
+        var words = v.prompt_text.trim() ? v.prompt_text.trim().split(/\s+/).length : 0;
+        pvC.textContent = v.prompt_text.length;
+        pvW.textContent = words;
+        pvK.textContent = Math.round(v.prompt_text.length / 4);
 
-        if (videoInput) {
-            videoInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    videoText.textContent = this.files[0].name;
-                    videoWrapper.classList.add('has-file');
-                    const icon = videoWrapper.querySelector('i');
-                    icon.classList.remove('bi-film');
-                    icon.classList.add('bi-check-circle-fill');
-                } else {
-                    videoText.textContent = 'Click to upload a video';
-                    videoWrapper.classList.remove('has-file');
-                    const icon = videoWrapper.querySelector('i');
-                    icon.classList.remove('bi-check-circle-fill');
-                    icon.classList.add('bi-film');
-                }
-            });
+        var hits = 0;
+        qList.innerHTML = rules.map(function (r) {
+            var ok = r.f(v); if (ok) hits++;
+            return '<li style="color:' + (ok ? '#22c55e' : '#9aa0a6') + ';"><i class="bi ' + (ok ? 'bi-check-circle-fill' : 'bi-circle') + ' me-2"></i>' + r.t + '</li>';
+        }).join('');
+        var pct = Math.round(hits / rules.length * 100);
+        var color = pct < 50 ? '#ef4444' : (pct < 84 ? '#f59e0b' : '#22c55e');
+        qBar.style.width = pct + '%'; qBar.style.background = color;
+        qLabel.style.background = color;
+        qLabel.textContent = pct < 50 ? 'Needs work' : (pct < 84 ? 'Getting there' : 'Publish-ready');
+    }
+    form.addEventListener('input', refresh);
+    form.addEventListener('change', refresh);
+
+    // Image upload: label + live preview
+    var fileInput = document.getElementById('id_output_image');
+    var uploadWrapper = document.getElementById('file-upload-wrapper');
+    var uploadText = document.getElementById('upload-text');
+    if (fileInput) fileInput.addEventListener('change', function () {
+        var icon = uploadWrapper.querySelector('i');
+        if (this.files && this.files.length > 0) {
+            uploadText.textContent = this.files[0].name;
+            uploadWrapper.classList.add('has-file');
+            icon.classList.remove('bi-cloud-arrow-up'); icon.classList.add('bi-check-circle-fill');
+            pvI.src = URL.createObjectURL(this.files[0]); pvI.hidden = false;
+            pvV.hidden = true;
+        } else {
+            uploadText.textContent = 'Click to upload an image';
+            uploadWrapper.classList.remove('has-file');
+            icon.classList.remove('bi-check-circle-fill'); icon.classList.add('bi-cloud-arrow-up');
+            pvI.hidden = true;
         }
     });
+
+    // Video upload: label + live preview
+    var videoInput = document.getElementById('id_output_video');
+    var videoWrapper = document.getElementById('video-upload-wrapper');
+    var videoText = document.getElementById('video-upload-text');
+    if (videoInput) videoInput.addEventListener('change', function () {
+        var icon = videoWrapper.querySelector('i');
+        if (this.files && this.files.length > 0) {
+            videoText.textContent = this.files[0].name;
+            videoWrapper.classList.add('has-file');
+            icon.classList.remove('bi-film'); icon.classList.add('bi-check-circle-fill');
+            pvV.src = URL.createObjectURL(this.files[0]); pvV.hidden = false;
+            pvI.hidden = true;
+        } else {
+            videoText.textContent = 'Click to upload a video';
+            videoWrapper.classList.remove('has-file');
+            icon.classList.remove('bi-check-circle-fill'); icon.classList.add('bi-film');
+            pvV.hidden = true;
+        }
+    });
+
+    refresh();
+});
 </script>
 {% endblock %}
