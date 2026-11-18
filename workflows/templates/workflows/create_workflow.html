@@ -1,6 +1,6 @@
 {% extends 'workflows/base.html' %}
 
-{% block title %}Prompt Studio - PromptForge{% endblock %}
+{% block title %}{% if remix_source %}Remix Prompt{% else %}Prompt Studio{% endif %} - SeePrompts{% endblock %}
 
 {% block content %}
 <style>
@@ -23,19 +23,29 @@
     .studio-stat { background: #f3e8ff; color: #6f42c1; border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: .85rem; }
     [data-bs-theme="dark"] .studio-stat { background: #2a1a3a; color: #a78bfa; }
     .pv-media img, .pv-media video { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; }
+    .remix-banner { border-left: 4px solid #6f42c1; background: #f3e8ff; border-radius: 12px; }
+    [data-bs-theme="dark"] .remix-banner { background: #2a1a3a; }
 </style>
 
 <div class="row justify-content-center">
     <div class="col-lg-11">
 
-        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <a href="{% url 'feed' %}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to Feed</a>
-                <h1 class="h3 fw-bold mb-1"><i class="bi bi-lightning-charge-fill me-2" style="color:#6f42c1;"></i>Prompt Studio</h1>
-                <p class="text-muted mb-0">Share your best AI prompt with the community.</p>
+                <a href="{% if remix_source %}{% url 'detail' remix_source.pk %}{% else %}{% url 'feed' %}{% endif %}" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back</a>
+                <h1 class="h3 fw-bold mb-1"><i class="bi bi-bezier2 me-2" style="color:#6f42c1;"></i>{% if remix_source %}Remix Studio{% else %}Prompt Studio{% endif %}</h1>
+                <p class="text-muted mb-0">{% if remix_source %}Make it yours — credit flows back automatically.{% else %}Share your best AI prompt with the community.{% endif %}</p>
             </div>
         </div>
+
+        {% if remix_source %}
+        <div class="remix-banner p-3 mb-4">
+            <i class="bi bi-bezier2 me-2" style="color:#6f42c1;"></i>
+            <strong>Remixing</strong>
+            <a href="{% url 'detail' remix_source.pk %}" class="text-decoration-none fw-semibold">{{ remix_source.title }}</a>
+            by @{{ remix_source.author.username }} — the original author is credited and notified when you publish.
+        </div>
+        {% endif %}
 
         {% if form.non_field_errors %}
             <div class="alert alert-danger">{{ form.non_field_errors }}</div>
@@ -43,9 +53,9 @@
 
         <form method="POST" enctype="multipart/form-data" id="studio-form">
             {% csrf_token %}
+            {% if remix_source %}<input type="hidden" name="remixed_from" value="{{ remix_source.pk }}">{% endif %}
             <div class="row g-4">
 
-                <!-- LEFT: the form -->
                 <div class="col-lg-7">
                     <div class="card shadow-sm">
                         <div class="card-body p-4 p-md-5">
@@ -103,9 +113,9 @@
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                <a href="{% url 'feed' %}" class="btn btn-outline-secondary">Cancel</a>
+                                <a href="{% if remix_source %}{% url 'detail' remix_source.pk %}{% else %}{% url 'feed' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
                                 <button type="submit" class="btn btn-primary px-4">
-                                    <i class="bi bi-check-lg me-2"></i> Publish Prompt
+                                    <i class="bi bi-check-lg me-2"></i> {% if remix_source %}Publish Remix{% else %}Publish Prompt{% endif %}
                                 </button>
                             </div>
 
@@ -113,7 +123,6 @@
                     </div>
                 </div>
 
-                <!-- RIGHT: live preview + quality coach -->
                 <div class="col-lg-5">
                     <div class="card studio-preview shadow-sm">
                         <div class="card-body p-4">
@@ -126,6 +135,9 @@
                                 {% endif %}
                                 <div class="fw-bold">@{{ user.username }}</div>
                             </div>
+                            {% if remix_source %}
+                            <div class="small text-muted mb-2"><i class="bi bi-bezier2 me-1" style="color:#6f42c1;"></i>remix of @{{ remix_source.author.username }}</div>
+                            {% endif %}
                             <h5 class="fw-bold mb-2" id="pv-title">Your prompt title</h5>
                             <span class="badge bg-primary mb-3" id="pv-model">AI Model</span>
                             <p class="text-muted small" id="pv-desc">Your description appears here.</p>
@@ -212,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('input', refresh);
     form.addEventListener('change', refresh);
 
-    // Image upload: label + live preview
     var fileInput = document.getElementById('id_output_image');
     var uploadWrapper = document.getElementById('file-upload-wrapper');
     var uploadText = document.getElementById('upload-text');
@@ -232,7 +243,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Video upload: label + live preview
     var videoInput = document.getElementById('id_output_video');
     var videoWrapper = document.getElementById('video-upload-wrapper');
     var videoText = document.getElementById('video-upload-text');

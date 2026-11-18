@@ -26,6 +26,7 @@ class Workflow(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    remixed_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='remixes')
 
     class Meta:
         ordering = ['-created_at']

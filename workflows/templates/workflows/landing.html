@@ -1,5 +1,5 @@
 {% extends 'workflows/base.html' %}
-{% block title %}PromptForge — Prompts that actually work{% endblock %}
+{% block title %}SeePrompts — Prompts that actually work{% endblock %}
 {% block content %}
 {% url 'signup' as signup_url %}
 {% url 'login' as login_url %}
@@ -58,9 +58,9 @@
     <div class="pf-inner">
         <div class="pf-hero-grid" style="display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;">
             <div>
-                <span class="pf-eyebrow"><i class="bi bi-lightning-charge-fill"></i> The prompt library built by real people</span>
+                <span class="pf-eyebrow"><i class="bi bi-eye-fill"></i> The prompt library built by real people</span>
                 <h1 class="pf-h1">Stop guessing.<br>Start with prompts that <em>actually work.</em></h1>
-                <p class="pf-sub">PromptForge is where creators share the exact prompts behind their results — copy one, remix it, and post your own. Free to join, forever.</p>
+                <p class="pf-sub">SeePrompts is where creators share the exact prompts behind their results — copy one, remix it, and post your own. Free to join, forever.</p>
                 <div class="d-flex gap-3 flex-wrap mt-4">
                     <a class="pf-cta pf-cta-primary" href="{{ signup_url|default:'/accounts/signup/' }}"><i class="bi bi-person-plus-fill"></i> Join free</a>
                     <a class="pf-cta pf-cta-ghost" href="{% url 'trending' %}"><i class="bi bi-graph-up-arrow"></i> Browse live prompts</a>
@@ -140,7 +140,7 @@
     <div class="pf-inner rv">
         <h2 class="fw-bold" style="font-size:clamp(1.8rem,3.6vw,2.8rem);">Your next great result starts with someone else's prompt.</h2>
         <p class="mb-4" style="opacity:.9;">Join {{ stats.members }} creators sharing what actually works.</p>
-        <a class="pf-cta" style="background:#14101f;color:#fff;" href="{{ signup_url|default:'/accounts/signup/' }}"><i class="bi bi-lightning-charge-fill"></i> Create your free account</a>
+        <a class="pf-cta" style="background:#14101f;color:#fff;" href="{{ signup_url|default:'/accounts/signup/' }}"><i class="bi bi-eye-fill"></i> Create your free account</a>
         <div class="mt-3 small" style="opacity:.85;">Already a member? <a href="{{ login_url|default:'/accounts/login/' }}" style="color:#fff;font-weight:700;">Log in</a></div>
     </div>
 </section>

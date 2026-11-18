@@ -1,5 +1,5 @@
 """
-WSGI config for PromptForge project.
+WSGI config for SeePrompts project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

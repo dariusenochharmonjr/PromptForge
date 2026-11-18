@@ -1,5 +1,5 @@
 """
-ASGI config for PromptForge project.
+ASGI config for SeePrompts project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

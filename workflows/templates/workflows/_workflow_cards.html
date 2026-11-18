@@ -51,6 +51,7 @@
 
         <div class="d-flex justify-content-between align-items-center border-top pt-3">
             <span class="badge bg-secondary">{{ workflow.ai_model }}</span>
+            {% if workflow.remixed_from %}<span class="badge ms-1" style="background:#6f42c1;color:#fff;"><i class="bi bi-bezier2 me-1"></i>Remix</span>{% endif %}
             <div class="d-flex align-items-center gap-2">
                 <form action="{% url 'upvote' workflow.pk %}" method="POST" class="upvote-form d-inline m-0">
                     {% csrf_token %}

@@ -1,547 +1,480 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}PromptForge{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Bootstrap Icons CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    <!-- Custom CSS -->
-    <style>
-        body { background-color: #f8f9fa; transition: background-color 0.3s ease, color 0.3s ease; }
-        .card { box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: none; border-radius: 12px; transition: background-color 0.3s ease; }
-        .btn-primary { background-color: #6f42c1; border-color: #6f42c1; }
-        
-        /* TWO-TIER HEADER STYLES */
-        .header-container { 
-            background-color: #fff !important; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            padding: 15px 24px 10px 24px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        .brand-section { margin-bottom: 12px; }
-        .navbar-brand { 
-            font-weight: 800; color: #6f42c1 !important; font-size: 1.6rem;
-            text-decoration: none; display: flex; align-items: center; gap: 8px;
-        }
-        .nav-links-container {
-            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-            border-top: 1px solid #f0f0f0; padding-top: 12px;
-            transition: border-color 0.3s ease;
-        }
-        .nav-link-custom {
-            color: #495057 !important; font-weight: 500; text-decoration: none;
-            padding: 8px 12px; border-radius: 8px; transition: all 0.2s ease;
-            display: flex; align-items: center; gap: 6px; font-size: 0.95rem;
-        }
-        .nav-link-custom:hover { background-color: #f3e8ff; color: #6f42c1 !important; }
-        
-        /* ACTIVE STATE STYLES */
-        .nav-link-custom.active {
-            background-color: #f3e8ff !important; color: #6f42c1 !important; font-weight: 600;
-        }
-        .nav-link-custom.active i { color: #6f42c1 !important; }
-        .nav-link-custom i { font-size: 1.2rem; }
-        
-        .nav-icon-badge { position: relative; }
-        .badge-notification {
-            position: absolute; top: -2px; right: -8px; font-size: 0.65rem; padding: 3px 6px; border-radius: 10px;
-        }
-        .btn-signup { background-color: #6f42c1; color: white !important; }
-        .btn-signup:hover { background-color: #5a32a3; color: white !important; }
-
-        /* MODERN REACTION BUTTONS */
-        .action-btn {
-            background: transparent; border: none; color: #6c757d;
-            font-size: 0.9rem; font-weight: 500; padding: 6px 12px;
-            border-radius: 20px; transition: all 0.2s ease;
-            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-        }
-        .action-btn i { font-size: 1.2rem; transition: transform 0.2s ease; }
-        .action-btn:hover { background-color: #f8f9fa; }
-        
-        /* Specific Hover Colors */
-        .action-btn.upvote-btn:hover { color: #198754; background-color: #d1e7dd; }
-        .action-btn.love-btn:hover { color: #dc3545; background-color: #f8d7da; }
-        .action-btn.comment-btn:hover { color: #6f42c1; background-color: #e2d9f3; }
-        
-        /* Bookmark Hover & Active Colors */
-        .action-btn.bookmark-btn:hover { color: #ffc107; background-color: #fff3cd; }
-        .action-btn.bookmark-btn.active { color: #ffc107; }
-        .action-btn.bookmark-btn.active i { transform: scale(1.1); }
-
-        /* Active States (When clicked) */
-        .action-btn.upvote-btn.active { color: #198754; }
-        .action-btn.love-btn.active { color: #dc3545; }
-        .action-btn.upvote-btn.active i, .action-btn.love-btn.active i { transform: scale(1.1); }
-
-        /* MODERN TEXTBOX STYLES (SaaS Look) */
-        .modern-input {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            box-shadow: none;
-            color: #212529;
-        }
-        .modern-input:focus {
-            background-color: #ffffff;
-            border-color: #6f42c1;
-            box-shadow: 0 0 0 4px rgba(111, 66, 193, 0.15);
-            outline: none;
-        }
-        textarea.modern-input.code-editor {
-            font-family: 'Courier New', Courier, monospace;
-            line-height: 1.6;
-            letter-spacing: 0.3px;
-        }
-        [data-bs-theme="dark"] .modern-input {
-            background-color: #2c2c2c;
-            border-color: #444;
-            color: #e0e0e0;
-        }
-        [data-bs-theme="dark"] .modern-input:focus {
-            background-color: #333333;
-            border-color: #a78bfa;
-            box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15);
-            color: #fff;
-        }
-
-        /* MODERN FILE UPLOAD STYLES */
-        .file-upload-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        .file-upload-input {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 2;
-        }
-        .file-upload-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            border: 2px dashed #d1d5db;
-            border-radius: 12px;
-            background-color: #f8f9fa;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        .file-upload-label i {
-            font-size: 2.5rem;
-            color: #6f42c1;
-            margin-bottom: 12px;
-            transition: transform 0.2s ease;
-        }
-        .file-upload-label .upload-text {
-            font-weight: 500;
-            color: #495057;
-            margin-bottom: 4px;
-        }
-        .file-upload-label .upload-hint {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-        .file-upload-wrapper:hover .file-upload-label {
-            border-color: #6f42c1;
-            background-color: #f3e8ff;
-        }
-        .file-upload-wrapper:hover .file-upload-label i {
-            transform: translateY(-4px);
-        }
-        .file-upload-wrapper.has-file .file-upload-label {
-            border-color: #198754;
-            background-color: #d1e7dd;
-        }
-        .file-upload-wrapper.has-file .file-upload-label i {
-            color: #198754;
-        }
-        .file-upload-wrapper.has-file .upload-text {
-            color: #198754;
-            font-weight: 600;
-        }
-        [data-bs-theme="dark"] .file-upload-label {
-            border-color: #444;
-            background-color: #2c2c2c;
-        }
-        [data-bs-theme="dark"] .file-upload-label .upload-text { color: #e0e0e0; }
-        [data-bs-theme="dark"] .file-upload-label .upload-hint { color: #888; }
-        [data-bs-theme="dark"] .file-upload-wrapper:hover .file-upload-label {
-            border-color: #a78bfa;
-            background-color: #2a1a3a;
-        }
-        [data-bs-theme="dark"] .file-upload-wrapper.has-file .file-upload-label {
-            border-color: #198754;
-            background-color: #1a3a2a;
-        }
-
-        /* =========================================
-           DARK MODE OVERRIDES (General)
-           ========================================= */
-        [data-bs-theme="dark"] body { background-color: #121212; color: #e0e0e0; }
-        [data-bs-theme="dark"] .header-container { 
-            background-color: #1e1e1e !important; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5); 
-            border-bottom: 1px solid #333;
-        }
-        [data-bs-theme="dark"] .nav-links-container { border-top-color: #333; }
-        [data-bs-theme="dark"] .nav-link-custom { color: #b0b0b0 !important; }
-        [data-bs-theme="dark"] .nav-link-custom:hover, 
-        [data-bs-theme="dark"] .nav-link-custom.active { 
-            background-color: #333 !important; 
-            color: #a78bfa !important;
-        }
-        [data-bs-theme="dark"] .card { 
-            background-color: #1e1e1e; 
-            color: #e0e0e0; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        [data-bs-theme="dark"] .action-btn { color: #b0b0b0; }
-        [data-bs-theme="dark"] .action-btn:hover { background-color: #333; }
-        [data-bs-theme="dark"] .action-btn.upvote-btn:hover { background-color: #1a3a2a; }
-        [data-bs-theme="dark"] .action-btn.love-btn:hover { background-color: #3a1a1a; }
-        [data-bs-theme="dark"] .action-btn.comment-btn:hover { background-color: #2a1a3a; }
-        [data-bs-theme="dark"] .action-btn.bookmark-btn:hover { background-color: #3a301a; }
-        [data-bs-theme="dark"] .form-control { 
-            background-color: #2c2c2c; 
-            border-color: #444; 
-            color: #fff; 
-        }
-        [data-bs-theme="dark"] .text-muted { color: #888 !important; }
-        [data-bs-theme="dark"] .bg-light { background-color: #2c2c2c !important; }
-        [data-bs-theme="dark"] .border-top { border-top-color: #333 !important; }
-
-        /* =========================================
-           DARK MODE TITLE & TEXT FIXES
-           ========================================= */
-        [data-bs-theme="dark"] h1,
-        [data-bs-theme="dark"] h2,
-        [data-bs-theme="dark"] h3,
-        [data-bs-theme="dark"] h4,
-        [data-bs-theme="dark"] h5,
-        [data-bs-theme="dark"] .card-title,
-        [data-bs-theme="dark"] .fw-bold {
-            color: #ffffff !important; 
-        }
-        [data-bs-theme="dark"] .text-dark {
-            color: #ffffff !important;
-        }
-
-        /* =========================================
-           MOBILE RESPONSIVENESS FIXES (NEW!)
-           ========================================= */
-        @media (max-width: 768px) {
-            /* 1. Make Navbar Horizontally Scrollable on Mobile */
-            .nav-links-container {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                padding-bottom: 8px;
-            }
-            /* Hide the scrollbar for a clean, app-like feel */
-            .nav-links-container::-webkit-scrollbar { display: none; }
-            .nav-links-container { -ms-overflow-style: none; scrollbar-width: none; }
-            
-            .nav-link-custom {
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
-
-            /* 2. Optimize Action Buttons for Small Screens */
-            .action-btn {
-                padding: 6px 8px;
-                font-size: 0.85rem;
-            }
-            /* Allow action buttons to wrap gracefully if the screen is too narrow */
-            .d-flex.align-items-center.gap-2, 
-            .d-flex.align-items-center.gap-3 {
-                flex-wrap: wrap;
-            }
-
-            /* 3. Profile Stats Tweaks */
-            .d-flex.justify-content-around {
-                gap: 10px;
-            }
-            .fs-5 {
-                font-size: 1.1rem !important;
-            }
-        }
-
-        @media (max-width: 480px) {
-            /* 4. Hide Text on Action Buttons on VERY small phones (Show Icons Only) */
-            .action-btn span {
-                display: none;
-            }
-            .action-btn i {
-                margin-right: 0;
-                font-size: 1.3rem;
-            }
-            /* Keep the "View" button text visible since it's the primary action */
-            .action-btn[style*="color: #6f42c1"] span {
-                display: inline !important;
-            }
-        }
-    </style>
-        <!-- ===== NAV SCROLL HINT: slides right-left once to teach the swipe ===== -->
-    <style>
-        @media (max-width: 768px) {
-            .nav-links-container { flex-wrap: nowrap; overflow-x: auto; }
-            .nav-link-custom { white-space: nowrap; flex-shrink: 0; }
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>{% block title %}SeePrompts{% endblock %}</title>
+    <meta name="description" content="{{ BRAND_TAGLINE|default:'See the prompts behind the results.' }}">
+    <meta property="og:title" content="{{ BRAND_NAME|default:'SeePrompts' }}">
+    <meta property="og:description" content="{{ BRAND_TAGLINE|default:'See the prompts behind the results.' }}">
+    <meta property="og:image" content="/static/push/icon-512.png">
+    <meta property="og:site_name" content="{{ BRAND_NAME|default:'SeePrompts' }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="theme-color" content="#6f42c1">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/static/push/icon-192.png" type="image/png" sizes="192x192">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="application-name" content="SeePrompts">
+    <meta name="apple-mobile-web-app-title" content="SeePrompts">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/static/push/icon-192.png">
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var nav = document.querySelector('.nav-links-container');
-        if (!nav) return;
-        if (sessionStorage.getItem('pfNavHint')) return;
-        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-        function hint() {
-            if (nav.scrollWidth <= nav.clientWidth + 8) return;  // nothing hidden → no hint
-            sessionStorage.setItem('pfNavHint', '1');            // once per session only
-            var home = nav.scrollLeft;
-            if (nav.scrollTo) {
-                nav.scrollTo({ left: nav.scrollWidth, behavior: 'smooth' });
-                setTimeout(function () { nav.scrollTo({ left: home, behavior: 'smooth' }); }, 1000);
-            } else {
-                nav.scrollLeft = nav.scrollWidth;
-                setTimeout(function () { nav.scrollLeft = home; }, 1000);
-            }
-        }
-
-        setTimeout(hint, 800);
-    });
+        (function () {
+            var t = localStorage.getItem('pfTheme');
+            if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', t);
+        })();
     </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root{
+            --pf-primary:#6f42c1; --pf-accent:#ff4d8d; --pf-highlight:#ffb020; --pf-ink:#14101f;
+            --pf-success:#22c55e; --pf-danger:#ef4444; --pf-warn:#f59e0b; --pf-info:#0ea5e9;
+            --pf-bg:#faf8ff; --pf-surface:#ffffff; --pf-cool:#f4f4f6; --pf-scrim:rgba(20,16,31,.62);
+        }
+        [data-bs-theme="dark"]{ --pf-bg:#14101f; --pf-surface:#232323; --pf-cool:#1c1826; }
+        html{scroll-behavior:smooth;}
+        body{background:var(--pf-bg);min-height:100vh;display:flex;flex-direction:column;}
+        body::before{content:"";position:fixed;inset:-25%;z-index:-1;pointer-events:none;opacity:.5;
+            background:radial-gradient(34% 36% at 16% 18%,rgba(111,66,193,.16),transparent 62%),
+                       radial-gradient(30% 32% at 84% 12%,rgba(255,77,141,.12),transparent 62%),
+                       radial-gradient(36% 38% at 62% 88%,rgba(255,176,32,.10),transparent 62%);
+            animation:pfAurora 22s ease-in-out infinite alternate;}
+        [data-bs-theme="dark"] body::before{opacity:.85;}
+        @keyframes pfAurora{from{transform:translate3d(-2%,-1%,0) scale(1)}to{transform:translate3d(2%,2%,0) scale(1.07)}}
+        *{scrollbar-width:thin;scrollbar-color:var(--pf-primary) rgba(111,66,193,.10);}
+        ::-webkit-scrollbar{width:10px;height:8px;}
+        ::-webkit-scrollbar-track{background:rgba(111,66,193,.08);border-radius:99px;}
+        ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--pf-primary),var(--pf-accent));border-radius:99px;border:2px solid transparent;background-clip:padding-box;}
+        ::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,var(--pf-accent),var(--pf-highlight));background-clip:padding-box;}
+        a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--pf-highlight);outline-offset:2px;border-radius:10px;}
+        .pf-header{position:sticky;top:0;z-index:1030;background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);animation:pfDrop .45s ease;}
+        [data-bs-theme="dark"] .pf-header{background:rgba(20,16,31,.88);}
+        .pf-header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,var(--pf-primary),var(--pf-accent),var(--pf-highlight));opacity:.85;}
+        @keyframes pfDrop{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+        .pf-hdr{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.55rem 0;}
+        .pf-brand{display:inline-flex;align-items:center;gap:.45rem;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;color:var(--pf-primary);text-decoration:none;}
+        [data-bs-theme="dark"] .pf-brand{color:#a78bfa;}
+        .pf-brand i{font-size:1.5rem;filter:drop-shadow(0 0 10px rgba(111,66,193,.55));transition:transform .25s ease;}
+        .pf-brand:hover i{transform:scale(1.12) rotate(-6deg);}
+        .pf-actions{display:flex;align-items:center;gap:.4rem;margin-left:auto;}
+        .pf-nav{display:flex;align-items:center;gap:.15rem;flex:1 1 100%;order:3;overflow-x:auto;padding:.15rem 0 .35rem;
+            -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);}
+        .pf-nav::-webkit-scrollbar{height:5px;}
+        @media (min-width:992px){ .pf-hdr{flex-wrap:nowrap;} .pf-brand{flex:0 0 auto;} .pf-nav{flex:1 1 auto;order:2;margin:0 .5rem;min-width:0;} .pf-actions{order:3;flex:0 0 auto;margin-left:auto;} }
+        .pf-link{display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap;flex:0 0 auto;text-decoration:none;
+            color:#4b4459;font-weight:600;font-size:.88rem;padding:.4rem .6rem;border-radius:99px;transition:all .18s ease;}
+        [data-bs-theme="dark"] .pf-link{color:#c9c3da;}
+        .pf-link:hover{color:var(--pf-primary);background:rgba(111,66,193,.10);transform:translateY(-1px);}
+        [data-bs-theme="dark"] .pf-link:hover{color:#a78bfa;}
+        .pf-link.active{color:var(--pf-primary);background:rgba(111,66,193,.14);box-shadow:inset 0 0 0 1px rgba(111,66,193,.25);}
+        [data-bs-theme="dark"] .pf-link.active{color:#a78bfa;background:rgba(167,139,250,.16);}
+        .pf-link .pf-badge{min-width:17px;height:17px;padding:0 5px;border-radius:99px;background:var(--pf-danger);color:#fff;font-size:.62rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
+        .pf-iconbtn{width:38px;height:38px;border-radius:50%;border:1px solid rgba(111,66,193,.25);background:transparent;color:var(--pf-primary);display:inline-flex;align-items:center;justify-content:center;transition:all .2s ease;}
+        [data-bs-theme="dark"] .pf-iconbtn{color:#a78bfa;border-color:rgba(167,139,250,.3);}
+        .pf-iconbtn:hover{background:rgba(111,66,193,.12);transform:rotate(-12deg) scale(1.06);}
+        .pf-logout{color:#6c6680;font-size:.88rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .7rem;border-radius:99px;}
+        .pf-logout:hover{color:var(--pf-danger);background:rgba(239,68,68,.10);}
+        main{flex:1;animation:pfRise .5s ease;}
+        @keyframes pfRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+        .pf-footer{border-top:1px solid rgba(111,66,193,.14);padding:1.4rem 0;margin-top:2rem;color:#6c6680;font-size:.85rem;}
+        [data-bs-theme="dark"] .pf-footer{color:#9a93b0;}
+        .pf-tabbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:1040;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);border-top:1px solid rgba(111,66,193,.15);padding:6px 8px calc(6px + env(safe-area-inset-bottom));}
+        [data-bs-theme="dark"] .pf-tabbar{background:rgba(20,16,31,.94);border-top-color:rgba(167,139,250,.2);}
+        .pf-tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:#6c6680;font-size:.66rem;font-weight:600;padding:6px 0;border-radius:12px;position:relative;}
+        [data-bs-theme="dark"] .pf-tabbar a{color:#9a93b0;}
+        .pf-tabbar a i{font-size:1.25rem;}
+        .pf-tabbar a.active{color:var(--pf-primary);}
+        [data-bs-theme="dark"] .pf-tabbar a.active{color:#a78bfa;}
+        .pf-tabbar a.pf-create{color:#fff;}
+        .pf-tabbar a.pf-create i{width:44px;height:44px;margin-top:-22px;border-radius:50%;background:linear-gradient(135deg,var(--pf-primary),var(--pf-accent));display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 8px 22px rgba(111,66,193,.45);border:3px solid #fff;}
+        [data-bs-theme="dark"] .pf-tabbar a.pf-create i{border-color:#14101f;}
+        .pf-tabbar .pf-tab-badge{position:absolute;top:2px;right:calc(50% - 18px);min-width:16px;height:16px;border-radius:99px;background:var(--pf-danger);color:#fff;font-size:.6rem;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+        html.pf-standalone body{padding-bottom:78px;}
+        html.pf-standalone .pf-tabbar{display:flex;}
+        #pf-install-card{position:fixed;right:16px;bottom:16px;z-index:1090;max-width:320px;border-radius:18px;background:var(--pf-ink);color:#fff;border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 60px rgba(0,0,0,.5);}
+        html.pf-standalone #pf-install-card{display:none;}
+        .pf-ios-step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+        .pf-ios-step:last-child{border-bottom:0;}
+        .pf-ios-step .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--pf-primary);color:#fff;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;}
+        @media (prefers-reduced-motion:reduce){body::before,.pf-header,main{animation:none;} .pf-link,.pf-brand i,.pf-iconbtn{transition:none;}}
+            /* ---- Component layer ---- */
+        .action-btn{background:none;border:0;display:inline-flex;align-items:center;gap:6px;color:#6c757d;font-weight:600;font-size:.95rem;padding:6px 12px;border-radius:99px;transition:all .18s ease;cursor:pointer;text-decoration:none;line-height:1;}
+        .action-btn:hover{background:rgba(111,66,193,.10);transform:translateY(-1px);}
+        .action-btn i{font-size:1.15rem;}
+        .upvote-btn:hover,.upvote-btn.active{color:#22c55e;}
+        .love-btn:hover,.love-btn.active{color:#ef4444;}
+        .bookmark-btn:hover,.bookmark-btn.active{color:#6f42c1;}
+        .comment-btn{color:#0ea5e9;}
+        .comment-btn:hover{color:#0ea5e9;background:rgba(14,165,233,.10);}
+        [data-bs-theme="dark"] .action-btn{color:#9a93b0;}
+        [data-bs-theme="dark"] .upvote-btn:hover,[data-bs-theme="dark"] .upvote-btn.active{color:#4ade80;}
+        [data-bs-theme="dark"] .love-btn:hover,[data-bs-theme="dark"] .love-btn.active{color:#f87171;}
+        [data-bs-theme="dark"] .bookmark-btn:hover,[data-bs-theme="dark"] .bookmark-btn.active{color:#a78bfa;}
+        [data-bs-theme="dark"] .comment-btn{color:#38bdf8;}
+        .action-btn:focus-visible{outline:3px solid #ffb020;outline-offset:2px;}
+        .modern-input{background:#f8f9fa;border:1px solid #e9ecef;border-radius:12px;padding:12px 16px;transition:all .2s;}
+        .modern-input:focus{background:#fff;border-color:#6f42c1;box-shadow:0 0 0 4px rgba(111,66,193,.15);outline:none;}
+        [data-bs-theme="dark"] .modern-input{background:#201c2b;border-color:rgba(167,139,250,.22);color:#e6e2f0;}
+        [data-bs-theme="dark"] .modern-input:focus{background:#262135;border-color:#a78bfa;box-shadow:0 0 0 4px rgba(167,139,250,.15);}
+        .file-upload-wrapper{position:relative;border:2px dashed rgba(111,66,193,.35);border-radius:16px;background:rgba(111,66,193,.04);transition:all .2s;overflow:hidden;}
+        .file-upload-wrapper:hover{border-color:#6f42c1;background:rgba(111,66,193,.08);}
+        .file-upload-wrapper.has-file{border-style:solid;border-color:#22c55e;background:rgba(34,197,94,.06);}
+        .file-upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+        .file-upload-label{padding:28px 16px;text-align:center;color:#6c6680;pointer-events:none;}
+        .file-upload-label i{font-size:2rem;color:#6f42c1;}
+        .file-upload-wrapper.has-file .file-upload-label i{color:#22c55e;}
+        .upload-text{font-weight:600;margin-top:6px;}
+        .upload-hint{font-size:.78rem;opacity:.7;}
+        [data-bs-theme="dark"] .file-upload-label{color:#9a93b0;}
+        /* Prompt clarity: no gray slab, readable in both themes */
+        .bg-light{background-color:transparent!important;}
+        pre{color:#241f36;}
+        [data-bs-theme="dark"] pre{color:#e6e2f0;}
+        [data-bs-theme="dark"] .border{border-color:rgba(167,139,250,.20)!important;}
+        [data-bs-theme="dark"] .form-control,[data-bs-theme="dark"] .form-select,[data-bs-theme="dark"] textarea,[data-bs-theme="dark"] input[type="text"],[data-bs-theme="dark"] input[type="email"],[data-bs-theme="dark"] input[type="password"]{background:#201c2b;border-color:rgba(167,139,250,.22);color:#e6e2f0;}
+        [data-bs-theme="dark"] .form-control:focus,[data-bs-theme="dark"] textarea:focus{background:#262135;border-color:#a78bfa;box-shadow:0 0 0 4px rgba(167,139,250,.15);color:#e6e2f0;}
+        [data-bs-theme="dark"] ::placeholder{color:#8f89a6;opacity:1;}
+        [data-bs-theme="dark"] .text-muted{color:#9a93b0!important;}
+        [data-bs-theme="dark"] .card{background:#232323;border-color:rgba(167,139,250,.14);}    </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-
-    <!-- Two-Tier Header -->
-    <div class="header-container">
-        <div class="brand-section">
-            <a class="navbar-brand" href="{% url 'feed' %}">
-                <i class="bi bi-lightning-charge-fill"></i> PromptForge
-            </a>
+    <header class="pf-header">
+        <div class="container-fluid px-3 px-lg-4 pf-hdr">
+            <a class="pf-brand" href="{% url 'feed' %}"><i class="bi bi-eye-fill"></i>{{ BRAND_NAME|default:'SeePrompts' }}</a>
+            <nav class="pf-nav" aria-label="Primary">
+                <a class="pf-link {% if request.resolver_match.url_name == 'feed' %}active{% endif %}" href="{% url 'feed' %}"><i class="bi bi-house-door-fill"></i>Home</a>
+                <a class="pf-link {% if request.resolver_match.url_name == 'trending' %}active{% endif %}" href="{% url 'trending' %}"><i class="bi bi-graph-up-arrow"></i>Trending</a>
+                {% if user.is_authenticated %}
+                <a class="pf-link {% if request.resolver_match.url_name == 'network' %}active{% endif %}" href="{% url 'network' user.username %}"><i class="bi bi-people-fill"></i>Followers</a>
+                <a class="pf-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" href="{% url 'profile' user.username %}"><i class="bi bi-person-circle"></i>Profile</a>
+                <a class="pf-link {% if request.resolver_match.url_name == 'saved' %}active{% endif %}" href="{% url 'saved' %}"><i class="bi bi-bookmark-fill"></i>Saved</a>
+                <a class="pf-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}" href="{% url 'notifications' %}"><i class="bi bi-bell-fill"></i>Notifications{% if unread_notifications %}<span class="pf-badge" id="navBadge">{{ unread_notifications }}</span>{% endif %}</a>
+                <a class="pf-link {% if request.resolver_match.url_name == 'create' %}active{% endif %}" href="{% url 'create' %}"><i class="bi bi-plus-circle-fill"></i>Create</a>
+                {% endif %}
+            </nav>
+            <div class="pf-actions">
+                <button class="pf-iconbtn" id="pfThemeToggle" type="button" aria-label="Toggle dark mode" title="Toggle theme"><i class="bi bi-moon-stars-fill"></i></button>
+                {% if user.is_authenticated %}
+                <a class="pf-logout" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i>Log Out</a>
+                {% else %}
+                <a class="pf-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i>Log In</a>
+                <a class="pf-link active" href="{% url 'signup' %}"><i class="bi bi-person-plus-fill"></i>Sign Up</a>
+                {% endif %}
+            </div>
         </div>
-        <div class="nav-links-container">
-            <a class="nav-link-custom {% if request.resolver_match.url_name == 'feed' %}active{% endif %}" href="{% url 'feed' %}">
-                <i class="bi bi-house-door-fill"></i> Home
-            </a>
-            
-            <a class="nav-link-custom {% if request.resolver_match.url_name == 'trending' %}active{% endif %}" href="{% url 'trending' %}">
-                <i class="bi bi-graph-up-arrow"></i> Trending
-            </a>
-            
-            {% if user.is_authenticated %}
-                <a class="nav-link-custom {% if request.resolver_match.url_name == 'network' %}active{% endif %}" href="{% url 'network' user.username %}">
-                    <i class="bi bi-people-fill"></i> Followers
-                </a>
-                <a class="nav-link-custom {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" href="{% url 'profile' user.username %}">
-                    <i class="bi bi-person-circle"></i> Profile
-                </a>
-                <a class="nav-link-custom {% if request.resolver_match.url_name == 'saved' %}active{% endif %}" href="{% url 'saved' %}">
-                    <i class="bi bi-bookmark-fill"></i> Saved
-                </a>
-                <a class="nav-link-custom nav-icon-badge {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}" href="{% url 'notifications' %}">
-                    <i class="bi bi-bell-fill"></i> Notifications
-                    {% if unread_notifications_count > 0 %}
-                        <span class="badge bg-danger badge-notification">{{ unread_notifications_count }}</span>
-                    {% endif %}
-                </a>
-                <a class="nav-link-custom {% if request.resolver_match.url_name == 'create' %}active{% endif %}" href="{% url 'create' %}">
-                    <i class="bi bi-plus-circle-fill"></i> Create
-                </a>
-                
-                <!-- DARK MODE TOGGLE BUTTON -->
-                <button id="theme-toggle" class="nav-link-custom" style="background: none; border: none; cursor: pointer;">
-                    <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
-                </button>
+    </header>
 
-                <a class="nav-link-custom" href="{% url 'logout' %}">
-                    <i class="bi bi-box-arrow-right"></i> Log Out
-                </a>
-            {% else %}
-                <!-- DARK MODE TOGGLE BUTTON (For logged out users) -->
-                <button id="theme-toggle" class="nav-link-custom" style="background: none; border: none; cursor: pointer;">
-                    <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
-                </button>
-
-                <a class="nav-link-custom {% if request.resolver_match.url_name == 'login' %}active{% endif %}" href="{% url 'login' %}">
-                    <i class="bi bi-box-arrow-in-right"></i> Log In
-                </a>
-                <a class="nav-link-custom btn-signup" href="{% url 'signup' %}">
-                    <i class="bi bi-person-plus-fill"></i> Sign Up
-                </a>
-            {% endif %}
+    {% if messages %}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080;">
+        {% for message in messages %}
+        <div class="toast align-items-center text-white border-0 shadow-lg show" role="alert" style="background:{% if message.tags == 'error' %}#ef4444{% else %}#22c55e{% endif %};">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold"><i class="bi bi-check-circle-fill me-2"></i>{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
         </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Main Content Area -->
-    <div class="container mt-4">
+    <main class="container py-4">
         {% block content %}{% endblock %}
+    </main>
+
+    <footer class="pf-footer">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span><i class="bi bi-eye-fill me-2" style="color:var(--pf-primary);"></i><strong>{{ BRAND_NAME|default:'SeePrompts' }}</strong> — {{ BRAND_TAGLINE|default:'See the prompts behind the results.' }}</span>
+            <span class="d-flex gap-3">
+                <a href="{% url 'trending' %}" class="text-decoration-none" style="color:inherit;">Trending</a>
+                {% url 'brand' as brand_url %}{% if brand_url %}<a href="{{ brand_url }}" class="text-decoration-none" style="color:inherit;">Brand</a>{% endif %}
+                <span>&copy; {% now "Y" %}</span>
+            </span>
+        </div>
+    </footer>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container" style="z-index:1080;"></div>
+
+    {% if user.is_authenticated %}
+    <div id="pf-push-banner" class="card shadow-lg border-0" hidden style="position:fixed;left:16px;bottom:16px;z-index:1090;max-width:340px;border-radius:16px;background:#14101f;color:#fff;">
+        <div class="card-body p-3">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-bell-fill fs-4" style="color:#ffb020;"></i>
+                <div>
+                    <div class="fw-bold">Never miss a moment</div>
+                    <div class="small" style="color:rgba(255,255,255,.75);">Get pop-ups when someone follows you, replies, or loves your prompt — even with the site closed.</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button id="pf-push-enable" class="btn btn-sm rounded-pill px-3" style="background:#6f42c1;color:#fff;">Enable notifications</button>
+                <button id="pf-push-dismiss" class="btn btn-sm btn-outline-light rounded-pill px-3">Not now</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div id="pf-install-card" class="card border-0" hidden>
+        <div class="card-body p-3">
+            <div class="d-flex align-items-start gap-2">
+                <div style="flex:0 0 44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6f42c1,#ff4d8d);display:flex;align-items:center;justify-content:center;"><i class="bi bi-eye-fill text-white fs-4"></i></div>
+                <div>
+                    <div class="fw-bold">Get the SeePrompts app</div>
+                    <div class="small" style="color:rgba(255,255,255,.72);">Home-screen icon, full-screen app, offline pages, instant alerts.</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button id="pf-install-btn" class="btn btn-sm rounded-pill px-3" style="background:#6f42c1;color:#fff;">Install</button>
+                <button id="pf-install-dismiss" class="btn btn-sm btn-outline-light rounded-pill px-3">Not now</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal fade" id="pf-ios-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:#14101f;color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:20px;">
+                <div class="modal-body p-4">
+                    <div class="fw-bold fs-5 mb-1"><i class="bi bi-phone me-2" style="color:#ffb020;"></i>Install on iPhone</div>
+                    <div class="small mb-3" style="color:rgba(255,255,255,.7);">Three taps, straight from Safari:</div>
+                    <div class="pf-ios-step"><span class="n">1</span><div>Tap the <strong>Share</strong> button <i class="bi bi-box-arrow-up"></i> in Safari's toolbar.</div></div>
+                    <div class="pf-ios-step"><span class="n">2</span><div>Scroll and choose <strong>Add to Home Screen</strong> <i class="bi bi-plus-square"></i>.</div></div>
+                    <div class="pf-ios-step"><span class="n">3</span><div>Tap <strong>Add</strong> — SeePrompts appears with your apps.</div></div>
+                    <button class="btn btn-sm rounded-pill px-4 mt-3 w-100" style="background:#6f42c1;color:#fff;" data-bs-dismiss="modal">Got it</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- INSTANT SOCIAL ACTIONS & DARK MODE SCRIPT -->
-     <script>
-    // --- DARK MODE (unchanged) ---
-    document.addEventListener('DOMContentLoaded', function () {
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const htmlElement = document.documentElement;
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-bs-theme', currentTheme);
-        updateThemeIcon(currentTheme);
+    <nav class="pf-tabbar" aria-label="App navigation">
+        <a href="{% url 'feed' %}" class="{% if request.resolver_match.url_name == 'feed' %}active{% endif %}"><i class="bi bi-house-door-fill"></i><span>Home</span></a>
+        <a href="{% url 'trending' %}" class="{% if request.resolver_match.url_name == 'trending' %}active{% endif %}"><i class="bi bi-graph-up-arrow"></i><span>Trending</span></a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'create' %}" class="pf-create"><i class="bi bi-plus-lg"></i><span>Create</span></a>
+        <a href="{% url 'notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}"><i class="bi bi-bell-fill"></i><span>Alerts</span>{% if unread_notifications %}<span class="pf-tab-badge">{{ unread_notifications }}</span>{% endif %}</a>
+        <a href="{% url 'profile' user.username %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="bi bi-person-fill"></i><span>Profile</span></a>
+        {% else %}
+        <a href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i><span>Log in</span></a>
+        <a href="{% url 'signup' %}"><i class="bi bi-person-plus-fill"></i><span>Join</span></a>
+        {% endif %}
+    </nav>
 
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function () {
-                const newTheme = htmlElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-                htmlElement.setAttribute('data-bs-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme);
-            });
-        }
-        function updateThemeIcon(theme) {
-            if (theme === 'dark') themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
-            else themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
-        }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function showToast(message, type) {
+        var c = document.getElementById('toast-container');
+        var bg = type === 'error' ? '#ef4444' : (type === 'info' ? '#6f42c1' : '#22c55e');
+        var el = document.createElement('div');
+        el.className = 'toast align-items-center text-white border-0 shadow-lg';
+        el.style.background = bg;
+        el.innerHTML = '<div class="d-flex"><div class="toast-body fw-semibold"><i class="bi bi-check-circle-fill me-2"></i>' + message + '</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+        c.appendChild(el);
+        var t = new bootstrap.Toast(el, { delay: 3200 }); t.show();
+        el.addEventListener('hidden.bs.toast', function () { el.remove(); });
+    }
+    document.querySelectorAll('.toast-container .toast.show').forEach(function (el) {
+        new bootstrap.Toast(el, { delay: 4200 }).show();
     });
 
-    // --- DELEGATED SOCIAL ACTIONS (works on infinite-scroll cards too) ---
-    document.addEventListener('submit', function (e) {
-        const form = e.target;
-        if (!(form instanceof HTMLFormElement)) return;
+    // Theme toggle
+    (function () {
+        var btn = document.getElementById('pfThemeToggle');
+        function paint() {
+            var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            btn.innerHTML = dark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
+        }
+        btn.addEventListener('click', function () {
+            var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', next);
+            localStorage.setItem('pfTheme', next);
+            paint();
+        });
+        paint();
+    })();
 
+    // Instant reactions / follows / replies
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
         function ajax(onSuccess) {
             e.preventDefault();
             fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                 .then(onSuccess)
-                .catch(err => { console.error('Action error:', err); form.submit(); }); // graceful fallback
+                .catch(function () { form.submit(); });
         }
-
         if (form.classList.contains('follow-form')) {
-            const username = form.querySelector('.follow-btn').getAttribute('data-username');
-            ajax(data => {
-                document.querySelectorAll('.follow-btn[data-username="' + username + '"]').forEach(btn => {
+            var username = form.querySelector('.follow-btn').getAttribute('data-username');
+            ajax(function (data) {
+                showToast(data.is_following ? 'You are now following @' + username : 'Unfollowed @' + username);
+                document.querySelectorAll('.follow-btn[data-username="' + username + '"]').forEach(function (btn) {
                     if (data.is_following) { btn.textContent = 'Following'; btn.classList.remove('btn-primary'); btn.classList.add('btn-outline-secondary'); }
                     else { btn.textContent = 'Follow'; btn.classList.remove('btn-outline-secondary'); btn.classList.add('btn-primary'); }
                 });
             });
-        }
-        else if (form.classList.contains('love-form')) {
-            const button = form.querySelector('.love-btn');
-            const icon = button.querySelector('i');
-            const countSpan = button.querySelector('.love-count');
-            ajax(data => {
-                button.classList.toggle('active', data.is_loved);
-                if (data.is_loved) icon.classList.replace('bi-heart', 'bi-heart-fill');
-                else icon.classList.replace('bi-heart-fill', 'bi-heart');
-                countSpan.textContent = data.love_count;
-                const total = document.getElementById('total-loves-counter');
-                if (total) {
-                    let c = parseInt(total.getAttribute('data-count'));
-                    c = data.is_loved ? c + 1 : c - 1;
-                    total.setAttribute('data-count', c);
-                    total.innerHTML = '<i class="bi bi-heart-fill text-danger"></i> ' + c;
-                }
+        } else if (form.classList.contains('love-form')) {
+            var lb = form.querySelector('.love-btn'), li = lb.querySelector('i'), lc = lb.querySelector('.love-count');
+            ajax(function (data) {
+                showToast(data.is_loved ? 'Prompt loved' : 'Love removed');
+                lb.classList.toggle('active', data.is_loved);
+                li.className = data.is_loved ? 'bi bi-heart-fill' : 'bi bi-heart';
+                lc.textContent = data.love_count;
             });
-        }
-        else if (form.classList.contains('upvote-form')) {
-            const button = form.querySelector('.upvote-btn');
-            const icon = button.querySelector('i');
-            const countSpan = button.querySelector('.upvote-count');
-            ajax(data => {
-                button.classList.toggle('active', data.is_upvoted);
-                if (data.is_upvoted) icon.classList.replace('bi-arrow-up', 'bi-arrow-up-fill');
-                else icon.classList.replace('bi-arrow-up-fill', 'bi-arrow-up');
-                countSpan.textContent = data.upvote_count;
+        } else if (form.classList.contains('upvote-form')) {
+            var ub = form.querySelector('.upvote-btn'), ui = ub.querySelector('i'), uc = ub.querySelector('.upvote-count');
+            ajax(function (data) {
+                ub.classList.toggle('active', data.is_upvoted);
+                ui.className = data.is_upvoted ? 'bi bi-arrow-up-fill' : 'bi bi-arrow-up';
+                uc.textContent = data.upvote_count;
             });
-        }
-        else if (form.classList.contains('bookmark-form')) {
-            const button = form.querySelector('.bookmark-btn');
-            const icon = button.querySelector('i');
-            ajax(data => {
-                button.classList.toggle('active', data.is_bookmarked);
-                if (data.is_bookmarked) icon.classList.replace('bi-bookmark', 'bi-bookmark-fill');
-                else icon.classList.replace('bi-bookmark-fill', 'bi-bookmark');
+        } else if (form.classList.contains('bookmark-form')) {
+            var bb = form.querySelector('.bookmark-btn'), bi = bb.querySelector('i');
+            ajax(function (data) {
+                showToast(data.is_bookmarked ? 'Saved to your collection' : 'Removed from saved');
+                bb.classList.toggle('active', data.is_bookmarked);
+                bi.className = data.is_bookmarked ? 'bi bi-bookmark-fill' : 'bi bi-bookmark';
             });
-        }
-        else if (form.classList.contains('comment-like-form')) {
-            const button = form.querySelector('.love-btn');
-            const icon = button.querySelector('i');
-            const countSpan = button.querySelector('.comment-like-count');
-            ajax(data => {
-                button.classList.toggle('active', data.is_liked);
-                if (data.is_liked) icon.classList.replace('bi-heart', 'bi-heart-fill');
-                else icon.classList.replace('bi-heart-fill', 'bi-heart');
-                countSpan.textContent = data.like_count;
-            });
-        }
-    });
-</script>
-<script>
-    document.addEventListener('click', function (e) {
-        const toggle = e.target.closest('.reply-toggle');
-        if (!toggle) return;
-        const form = document.getElementById(toggle.getAttribute('data-reply-form'));
-        if (form) {
-            form.hidden = !form.hidden;
-            if (!form.hidden) form.querySelector('textarea').focus();
-        }
-    });
-
-    document.addEventListener('submit', function (e) {
-        const form = e.target;
-        if (form.classList.contains('reply-form')) {
-            e.preventDefault();
-            const textarea = form.querySelector('textarea');
-            const wrap = document.getElementById(form.getAttribute('data-replies'));
-            const count = document.getElementById(form.getAttribute('data-count'));
-            fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-                .then(d => {
-                    wrap.insertAdjacentHTML('beforeend', d.html);
-                    count.textContent = d.count;
-                    textarea.value = '';
-                    form.hidden = true;
-                })
-                .catch(err => { console.error(err); form.submit(); });
         } else if (form.classList.contains('like-form-v2')) {
-            e.preventDefault();
-            const btn = form.querySelector('button');
-            const icon = btn.querySelector('i');
-            const span = btn.querySelector('.like-count');
-            fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-                .then(d => {
-                    btn.classList.toggle('active', d.is_liked);
-                    icon.classList.toggle('bi-heart-fill', d.is_liked);
-                    icon.classList.toggle('bi-heart', !d.is_liked);
-                    span.textContent = d.like_count;
-                })
-                .catch(err => { console.error(err); form.submit(); });
+            var cb = form.querySelector('.love-btn'), ci = cb.querySelector('i'), cc = cb.querySelector('.like-count');
+            ajax(function (data) {
+                cb.classList.toggle('active', data.is_liked);
+                ci.className = data.is_liked ? 'bi bi-heart-fill' : 'bi bi-heart';
+                cc.textContent = data.like_count;
+            });
+        } else if (form.classList.contains('reply-form')) {
+            var ta = form.querySelector('textarea');
+            var wrap = document.getElementById(form.getAttribute('data-replies'));
+            var cnt = document.getElementById(form.getAttribute('data-count'));
+            ajax(function (data) {
+                showToast('Reply posted');
+                wrap.insertAdjacentHTML('beforeend', data.html);
+                cnt.textContent = data.count;
+                ta.value = '';
+                form.hidden = true;
+            });
         }
     });
-</script>
-    
+    </script>
+
+    {% if user.is_authenticated %}
+    {% url 'notifications_poll' as poll_url %}
+    {% url 'heartbeat' as hb_url %}
+    {% url 'push_config' as pc_url %}
+    {% url 'push_subscribe' as ps_url %}
+    {% url 'push_test' as pt_url %}
+    <script>
+    (function () {
+        var seen = {};
+        try { seen = JSON.parse(localStorage.getItem('pfPushSeen') || '{}'); } catch (e) {}
+        function remember(id) { seen[id] = 1; localStorage.setItem('pfPushSeen', JSON.stringify(seen)); }
+        function csrf() { var m = document.cookie.match(/csrftoken=([^;]+)/); return m ? m[1] : ''; }
+        function setBadges(n) {
+            var nav = document.getElementById('navBadge');
+            if (nav) { nav.textContent = n; nav.style.display = n ? '' : 'none'; }
+            else if (n) {
+                var link = document.querySelector('.pf-nav a[href*="notifications"]');
+                if (link) { var s = document.createElement('span'); s.className = 'pf-badge'; s.id = 'navBadge'; s.textContent = n; link.appendChild(s); }
+            }
+            document.querySelectorAll('.pf-tab-badge').forEach(function (b) { b.textContent = n; b.style.display = n ? '' : 'none'; });
+            if (navigator.setAppBadge) { n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); }
+        }
+        var pollUrl = '{{ poll_url|default:"" }}';
+        if (pollUrl) {
+            var poll = function () {
+                fetch(pollUrl, { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+                    if (!d) return;
+                    d.notifications.forEach(function (n) {
+                        if (!seen[n.id]) { remember(n.id); showToast('@' + n.actor + ' ' + n.verb, 'info'); }
+                    });
+                    setBadges(d.unread);
+                }).catch(function () {});
+            };
+            setTimeout(poll, 4000);
+            setInterval(poll, 30000);
+        }
+        var hbUrl = '{{ hb_url|default:"" }}';
+        if (hbUrl) {
+            var ping = function () { fetch(hbUrl, { credentials: 'same-origin' }).catch(function () {}); };
+            setInterval(function () { if (!document.hidden) ping(); }, 45000);
+            document.addEventListener('visibilitychange', function () { if (!document.hidden) ping(); });
+        }
+        // Web Push
+        if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && '{{ pc_url|default:"" }}') {
+            function b64(s) {
+                var pad = '='.repeat((4 - s.length % 4) % 4);
+                var raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+                var out = new Uint8Array(raw.length);
+                for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+                return out;
+            }
+            function ensureSub(reg, key, test) {
+                reg.pushManager.getSubscription().then(function (sub) {
+                    var p = sub ? Promise.resolve(sub) : reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(key) });
+                    p.then(function (s) {
+                        fetch('{{ ps_url }}', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() }, body: JSON.stringify(s.toJSON()) })
+                            .then(function () { if (test && '{{ pt_url|default:"" }}') fetch('{{ pt_url }}', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': csrf() } }); });
+                    }).catch(function () {});
+                });
+            }
+            fetch('{{ pc_url }}', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (cfg) {
+                if (!cfg.publicKey) return;
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(function (reg) {
+                    var banner = document.getElementById('pf-push-banner');
+                    if (Notification.permission === 'granted') { ensureSub(reg, cfg.publicKey); return; }
+                    if (Notification.permission === 'default' && !localStorage.getItem('pfPushDismissed')) banner.hidden = false;
+                    document.getElementById('pf-push-dismiss').onclick = function () { banner.hidden = true; localStorage.setItem('pfPushDismissed', '1'); };
+                    document.getElementById('pf-push-enable').onclick = function () {
+                        Notification.requestPermission().then(function (perm) {
+                            banner.hidden = true;
+                            if (perm === 'granted') ensureSub(reg, cfg.publicKey, true);
+                        });
+                    };
+                }).catch(function () {});
+            }).catch(function () {});
+        }
+    })();
+    </script>
+    {% endif %}
+
+    <script>
+    (function () {
+        var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+        if (standalone) document.documentElement.classList.add('pf-standalone');
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (window.__pfRefreshing) return;
+                window.__pfRefreshing = true;
+                var el = document.createElement('div');
+                el.className = 'toast align-items-center text-white border-0 shadow-lg';
+                el.style.background = '#6f42c1';
+                el.innerHTML = '<div class="d-flex"><div class="toast-body fw-semibold"><i class="bi bi-arrow-repeat me-2"></i>A new version of SeePrompts is ready.</div><button class="btn btn-sm btn-light rounded-pill me-2 my-auto" onclick="location.reload()">Update</button></div>';
+                document.getElementById('toast-container').appendChild(el);
+                new bootstrap.Toast(el, { autohide: false }).show();
+            });
+            if (!standalone) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+        }
+        if (standalone) return;
+        var card = document.getElementById('pf-install-card');
+        var deferred = null;
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (localStorage.getItem('pfInstallDismissed')) return;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault(); deferred = e;
+            setTimeout(function () { card.hidden = false; }, 5000);
+        });
+        window.addEventListener('appinstalled', function () { card.hidden = true; showToast('SeePrompts installed. Welcome to the app.'); });
+        document.getElementById('pf-install-dismiss').onclick = function () { card.hidden = true; localStorage.setItem('pfInstallDismissed', '1'); };
+        document.getElementById('pf-install-btn').onclick = function () {
+            if (deferred) { deferred.prompt(); deferred.userChoice.then(function () { deferred = null; card.hidden = true; }); }
+            else if (isIOS) { new bootstrap.Modal(document.getElementById('pf-ios-modal')).show(); }
+            else { card.hidden = true; showToast('Use your browser menu: Install app / Add to Home screen.', 'info'); }
+        };
+        if (isIOS) setTimeout(function () { card.hidden = false; }, 6000);
+    })();
+    </script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

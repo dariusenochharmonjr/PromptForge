@@ -129,14 +129,22 @@ def detail_view(request, pk):
     })
 
 
-# --- CREATE WORKFLOW (Cloudinary failures become friendly field errors) ---
 @login_required
 def create_workflow_view(request):
+    remix_pk = request.GET.get('remix') or request.POST.get('remixed_from')
+    remix_source = None
+    if remix_pk:
+        try:
+            remix_source = Workflow.objects.filter(pk=int(remix_pk)).first()
+        except (TypeError, ValueError):
+            remix_source = None
+
     if request.method == 'POST':
         form = WorkflowForm(request.POST, request.FILES)
         if form.is_valid():
             workflow = form.save(commit=False)
             workflow.author = request.user
+            workflow.remixed_from = remix_source
             try:
                 workflow.save()
             except Exception:
@@ -148,11 +156,22 @@ def create_workflow_view(request):
                     form.add_error('output_video', msg)
                 else:
                     form.add_error(None, msg)
-                return render(request, 'workflows/create_workflow.html', {'form': form})
+                return render(request, 'workflows/create_workflow.html', {'form': form, 'remix_source': remix_source})
+            if remix_source and remix_source.author != request.user:
+                Notification.objects.create(recipient=remix_source.author, actor=request.user,
+                                            verb='remixed your prompt', target=workflow)
             return redirect('detail', pk=workflow.pk)
     else:
-        form = WorkflowForm()
-    return render(request, 'workflows/create_workflow.html', {'form': form})
+        initial = {}
+        if remix_source:
+            initial = {
+                'title': f'Remix: {remix_source.title}',
+                'description': remix_source.description,
+                'prompt_text': remix_source.prompt_text,
+                'ai_model': remix_source.ai_model,
+            }
+        form = WorkflowForm(initial=initial)
+    return render(request, 'workflows/create_workflow.html', {'form': form, 'remix_source': remix_source})
 
 
 # --- INSTANT UPVOTE ---
@@ -431,7 +450,7 @@ def csrf_failure_view(request, reason=""):
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Security refresh - PromptForge</title>
+        <title>Security refresh - SeePrompts</title>
         <style>
             body {{ font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f6f4fb;
                    color: #241f36; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
@@ -446,7 +465,7 @@ def csrf_failure_view(request, reason=""):
     </head>
     <body>
         <div class="card">
-            <div class="bolt">⚡</div>
+            <div class="bolt"><svg viewBox="0 0 24 24" width="42" height="42"><path d="M12 5C7 5 3 9.5 2 12c1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 12c-3.9 0-7.2-3.2-8.3-5C4.8 10.2 8.1 7 12 7s7.2 3.2 8.3 5c-1.1 1.8-4.4 5-8.3 5z" fill="#6f42c1"/><circle cx="12" cy="12" r="3" fill="#6f42c1"/><circle cx="11" cy="11" r="1" fill="#fff"/></svg></div>
             <h1>Quick security refresh</h1>
             <p>Your browser needed a fresh security cookie. We've set one for you — taking you right back so you can try again.</p>
             <a href="{target}">Continue now</a>
