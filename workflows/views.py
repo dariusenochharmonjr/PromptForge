@@ -475,3 +475,63 @@ def csrf_failure_view(request, reason=""):
     </html>
     """
     return HttpResponse(html, status=403)
+def pwa_manifest(request):
+    return JsonResponse({
+        'id': '/', 'name': f"{_settings.BRAND_NAME} - AI Prompt Community", 'short_name': _settings.BRAND_NAME,
+        'description': _settings.BRAND_TAGLINE, 'start_url': '/?source=pwa', 'scope': '/',
+        'display': 'standalone', 'display_override': ['standalone', 'minimal-ui'],
+        'orientation': 'portrait-primary', 'background_color': '#14101f', 'theme_color': '#6f42c1',
+        'lang': 'en', 'categories': ['productivity', 'social', 'utilities'],
+        'icons': [
+            {'src': '/static/push/icon-192.png', 'sizes': '192x192', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/static/push/icon-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/static/push/icon-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'},
+        ],
+        'shortcuts': [
+            {'name': 'New prompt', 'short_name': 'Create', 'url': '/create/?source=shortcut', 'icons': [{'src': '/static/push/icon-192.png', 'sizes': '192x192'}]},
+            {'name': 'Trending', 'url': '/trending/?source=shortcut', 'icons': [{'src': '/static/push/icon-192.png', 'sizes': '192x192'}]},
+            {'name': 'Notifications', 'url': '/notifications/?source=shortcut', 'icons': [{'src': '/static/push/icon-192.png', 'sizes': '192x192'}]},
+        ],
+        'share_target': {'action': '/create/', 'method': 'GET', 'params': {'title': 'title', 'text': 'text', 'url': 'url'}},
+        'prefer_related_applications': False,
+    }, content_type='application/manifest+json')
+
+
+def offline_view(request):
+    return render(request, 'workflows/offline.html')
+
+
+def favicon_svg(request):
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+           '<rect width="24" height="24" rx="5.28" fill="#6f42c1"/>'
+           '<path d="M12 5C7 5 3 9.5 2 12c1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 12c-3.9 0-7.2-3.2-8.3-5C4.8 10.2 8.1 7 12 7s7.2 3.2 8.3 5c-1.1 1.8-4.4 5-8.3 5z" fill="#ffffff"/>'
+           '<circle cx="12" cy="12" r="3" fill="#ffffff"/>'
+           '<circle cx="10.8" cy="10.8" r="0.9" fill="#6f42c1"/></svg>')
+    return HttpResponse(svg, content_type='image/svg+xml')
+
+
+def brand_view(request):
+    return render(request, 'workflows/brand.html')
+
+
+def brand_names_view(request):
+    return redirect('brand')
+
+
+def service_worker(request):
+    resp = render(request, 'workflows/sw.js', content_type='application/javascript')
+    resp['Service-Worker-Allowed'] = '/'
+    resp['Cache-Control'] = 'no-cache'
+    return resp
+
+@login_required
+def notifications_poll(request):
+    qs = Notification.objects.filter(recipient=request.user, is_read=False).select_related('actor', 'target')[:5]
+    items = [{
+        'id': n.id,
+        'actor': n.actor.username,
+        'verb': n.verb,
+        'url': ('/workflow/%s/' % n.target_id) if n.target_id else ('/profile/%s/' % n.actor.username),
+    } for n in qs]
+    return JsonResponse({'notifications': items,
+                         'unread': Notification.objects.filter(recipient=request.user, is_read=False).count()})

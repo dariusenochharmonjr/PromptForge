@@ -29,4 +29,11 @@ urlpatterns = [
     path('workflow/<int:pk>/comment/', views.post_comment_view, name='post_comment'),
     path('comment/<int:pk>/reply/', views.post_reply_view, name='post_reply'),
     path('comment/<int:pk>/like/', views.like_comment_view, name='like_comment'),
+    path('manifest.webmanifest', views.pwa_manifest, name='pwa_manifest'),
+    path('favicon.svg', views.favicon_svg, name='favicon_svg'),
+    path('offline/', views.offline_view, name='offline'),
+    path('brand/', views.brand_view, name='brand'),
+    path('brand/names/', views.brand_names_view, name='brand_names'),
+    path('sw.js', views.service_worker, name='service_worker'),
+    path('notifications/poll/', views.notifications_poll, name='notifications_poll'),
 ]
