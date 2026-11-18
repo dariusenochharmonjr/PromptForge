@@ -185,3 +185,9 @@ STORAGES = {
     "default": {"BACKEND": MEDIA_STORAGE_BACKEND},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+# Production/local overrides (gitignored)
+try:
+    from .local_settings import *  # noqa: F401,F403
+except ImportError:
+    pass
+
